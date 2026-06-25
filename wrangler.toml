@@ -1,0 +1,8 @@
+name = "nav"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nav-db"
+database_id = "60a78ed8-53c7-4deb-9b53-1a5d1723f0dd"

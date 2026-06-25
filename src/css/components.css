@@ -656,3 +656,270 @@
   color: rgb(185, 28, 28);
 }
 
+/* ── IP Popup Card ── */
+:root {
+  --ip-popup-bg: rgba(255, 255, 255, 0.8);
+  --ip-popup-border: rgba(0, 0, 0, 0.08);
+  --ip-popup-text: #201914;
+  --ip-popup-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --ip-popup-muted: #6b7280;
+  --ip-popup-row-border: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+  --ip-popup-bg: rgba(30, 41, 59, 0.75);
+  --ip-popup-border: rgba(255, 255, 255, 0.1);
+  --ip-popup-text: #f8fafc;
+  --ip-popup-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --ip-popup-muted: #94a3b8;
+  --ip-popup-row-border: rgba(255, 255, 255, 0.05);
+}
+
+.ip-popup {
+  position: fixed;
+  top: 76px;
+  right: 24px;
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  background: var(--ip-popup-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ip-popup-border);
+  border-radius: 16px;
+  box-shadow: var(--ip-popup-shadow);
+  color: var(--ip-popup-text);
+  z-index: 999;
+  padding: 18px;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  animation: ipPopupSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@keyframes ipPopupSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ip-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ip-popup-row-border);
+  padding-bottom: 8px;
+}
+
+.ip-popup-title {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ip-popup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ip-btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--ip-popup-text);
+  opacity: 0.7;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ip-btn-icon:hover {
+  opacity: 1;
+  background: rgba(128, 128, 128, 0.15);
+}
+
+.ip-popup-ip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ip-popup-ip {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ip-popup-copy-btn {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--ip-popup-border);
+  background: rgba(128, 128, 128, 0.08);
+  color: var(--ip-popup-text);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.ip-popup-copy-btn:hover {
+  background: rgba(128, 128, 128, 0.18);
+}
+
+.ip-popup-geo {
+  font-size: 13px;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Risk Bar */
+.ip-risk-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ip-risk-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ip-risk-bar-container {
+  height: 8px;
+  background: rgba(128, 128, 128, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ip-risk-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
+  width: 0%;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tags */
+.ip-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ip-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.ip-tag-residential {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.ip-tag-mobile {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.ip-tag-datacenter {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.ip-tag-info {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--ip-popup-text);
+  opacity: 0.85;
+}
+
+/* Detail list */
+.ip-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.ip-details-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--ip-popup-row-border);
+}
+
+.ip-details-row:last-child {
+  border-bottom: none;
+}
+
+.ip-details-label {
+  opacity: 0.7;
+}
+
+.ip-details-val {
+  font-weight: 500;
+  text-align: right;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Minimap */
+.ip-map-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ip-minimap {
+  height: 120px;
+  border-radius: 8px;
+  border: 1px solid var(--ip-popup-border);
+  background: rgba(128, 128, 128, 0.05);
+  overflow: hidden;
+  z-index: 1; /* Keep map layers inside */
+}
+
+.ip-coords-text {
+  font-size: 11px;
+  opacity: 0.6;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+/* Spinner for refresh */
+.ip-spinner {
+  animation: ipSpin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes ipSpin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+

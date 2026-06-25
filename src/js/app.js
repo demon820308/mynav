@@ -11,6 +11,8 @@ let allLinks = [];
 let allCategories = [];
 let editMode = false;
 let dragState = null;
+let currentIpInfo = null;
+let ipMap = null;
 
 async function init() {
   initTheme();
@@ -675,9 +677,248 @@ function formatNumber(n) {
   return String(n);
 }
 
-async function initIpBadge() {
+let leafletPromise = null;
+
+function loadLeaflet() {
+  if (leafletPromise) return leafletPromise;
+  
+  leafletPromise = new Promise((resolve, reject) => {
+    if (window.L) {
+      resolve();
+      return;
+    }
+    
+    // Inject CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet/dist/leaflet.css';
+    document.head.appendChild(link);
+    
+    // Inject JS
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet/dist/leaflet.js';
+    script.onload = () => resolve();
+    script.onerror = (err) => {
+      leafletPromise = null;
+      reject(new Error('Failed to load Leaflet.js'));
+    };
+    document.body.appendChild(script);
+  });
+  return leafletPromise;
+}
+
+function renderMiniMap(lat, lon) {
+  if (ipMap) {
+    try {
+      ipMap.remove();
+    } catch (e) {
+      console.warn('Error removing map:', e);
+    }
+    ipMap = null;
+  }
+  
+  const mapContainer = document.getElementById('ip-minimap');
+  if (!mapContainer) return;
+  
+  try {
+    ipMap = L.map(mapContainer, {
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      touchZoom: false,
+      doubleClickZoom: false,
+      scrollWheelZoom: false,
+      boxZoom: false,
+      keyboard: false
+    }).setView([lat, lon], 7);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(ipMap);
+    
+    L.circleMarker([lat, lon], {
+      color: '#ef4444',
+      fillColor: '#ef4444',
+      fillOpacity: 0.8,
+      radius: 6
+    }).addTo(ipMap);
+    
+    setTimeout(() => {
+      if (ipMap) ipMap.invalidateSize();
+    }, 100);
+  } catch (err) {
+    console.error('Failed to init Leaflet map:', err);
+  }
+}
+
+function renderIpBadge(info) {
   const container = document.getElementById('ip-badge');
   if (!container) return;
+  
+  let badgeClass = 'ip-clean';
+  let statusText = '纯净';
+  let statusEmoji = '🟢';
+
+  if (info.level === 'danger') {
+    badgeClass = 'ip-danger';
+    statusText = '高风险';
+    statusEmoji = '🔴';
+  } else if (info.level === 'suspicious') {
+    badgeClass = 'ip-suspicious';
+    statusText = '中风险';
+    statusEmoji = '🟡';
+  }
+
+  container.innerHTML = `
+    <div class="ip-badge ${badgeClass}" style="cursor: pointer;">
+      <span class="ip-emoji">${statusEmoji}</span>
+      <span class="ip-text">${escapeHtml(info.ip)}</span>
+      <span class="ip-status-text">${statusText}</span>
+    </div>
+  `;
+}
+
+function fillPopupContent(info) {
+  const popup = document.getElementById('ip-popup');
+  if (!popup) return;
+
+  let statusText = '安全';
+  let statusEmoji = '🟢';
+  let riskScore = 0;
+
+  if (info.level === 'danger') {
+    statusText = '高风险';
+    statusEmoji = '🔴';
+    riskScore = info.threat_score > 49 ? info.threat_score : 75;
+  } else if (info.level === 'suspicious') {
+    statusText = '中风险';
+    statusEmoji = '🟡';
+    riskScore = info.threat_score > 10 ? info.threat_score : 35;
+  } else {
+    riskScore = info.threat_score || 5;
+  }
+
+  const geoParts = [];
+  if (info.continent) geoParts.push(info.continent);
+  if (info.country) geoParts.push(info.country);
+  if (info.region) geoParts.push(info.region);
+  if (info.city) geoParts.push(info.city);
+  if (info.district) geoParts.push(info.district);
+  const geoText = geoParts.join(' · ') || '未知位置';
+
+  let connTypeLabel = '未知网络';
+  if (info.conn_type === 'residential') connTypeLabel = '🏠 家用宽带';
+  else if (info.conn_type === 'mobile') connTypeLabel = '📡 移动蜂窝';
+  else if (info.conn_type === 'datacenter') connTypeLabel = '🏢 数据中心';
+
+  popup.innerHTML = `
+    <div class="ip-popup-header">
+      <span class="ip-popup-title">🛡️ IP 安全画像</span>
+      <div class="ip-popup-actions">
+        <button id="ip-refresh-btn" class="ip-btn-icon" title="重新检测">🔄</button>
+        <button id="ip-close-btn" class="ip-btn-icon" style="font-size:16px;" title="关闭">✕</button>
+      </div>
+    </div>
+    <div class="ip-popup-ip-row">
+      <div class="ip-popup-ip">
+        <span>${statusEmoji}</span>
+        <span>${escapeHtml(info.ip)}</span>
+      </div>
+      <button id="ip-copy-btn" class="ip-popup-copy-btn">📋 复制</button>
+    </div>
+    <div class="ip-popup-geo">
+      <span>📍</span>
+      <span>${escapeHtml(geoText)}</span>
+    </div>
+    <div class="ip-risk-section">
+      <div class="ip-risk-label-row">
+        <span>风险评分</span>
+        <span style="color: ${info.level === 'danger' ? '#ef4444' : info.level === 'suspicious' ? '#eab308' : '#22c55e'}">${riskScore} / 100 (${statusText})</span>
+      </div>
+      <div class="ip-risk-bar-container">
+        <div id="ip-risk-bar" class="ip-risk-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+    <div class="ip-tags-row">
+      <span class="ip-tag ip-tag-${info.conn_type || 'info'}">${connTypeLabel}</span>
+      ${info.continent ? `<span class="ip-tag ip-tag-info">🌏 ${escapeHtml(info.continent)}</span>` : ''}
+      ${info.timezone ? `<span class="ip-tag ip-tag-info">🕐 ${escapeHtml(info.timezone)}</span>` : ''}
+    </div>
+    <div class="ip-details-list">
+      <div class="ip-details-row">
+        <span class="ip-details-label">运营商 (ISP)</span>
+        <span class="ip-details-val" title="${escapeHtml(info.isp || '未知')}">${escapeHtml(info.isp || '未知')}</span>
+      </div>
+      <div class="ip-details-row">
+        <span class="ip-details-label">AS 编号</span>
+        <span class="ip-details-val" title="${escapeHtml(info.as || '未知')}">${escapeHtml(info.as || '未知')}</span>
+      </div>
+      <div class="ip-details-row">
+        <span class="ip-details-label">代理 / VPN</span>
+        <span class="ip-details-val" style="color: ${info.is_proxy ? '#ef4444' : 'inherit'}">${info.is_proxy ? '⚠️ 检测到' : '未检测到'}</span>
+      </div>
+      <div class="ip-details-row">
+        <span class="ip-details-label">机房 IP (Hosting)</span>
+        <span class="ip-details-val" style="color: ${info.is_hosting ? '#ef4444' : 'inherit'}">${info.is_hosting ? '⚠️ 是' : '否'}</span>
+      </div>
+    </div>
+    <div class="ip-map-section" id="ip-map-section">
+      <div id="ip-minimap" class="ip-minimap"></div>
+      <div class="ip-coords-text">经纬度: ${info.lat !== null ? info.lat.toFixed(4) : '--'}, ${info.lon !== null ? info.lon.toFixed(4) : '--'}</div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const bar = document.getElementById('ip-risk-bar');
+    if (bar) bar.style.width = `${riskScore}%`;
+  }, 50);
+
+  // Bind actions
+  document.getElementById('ip-close-btn').addEventListener('click', () => {
+    popup.style.display = 'none';
+  });
+
+  document.getElementById('ip-copy-btn').addEventListener('click', async (e) => {
+    try {
+      await navigator.clipboard.writeText(info.ip);
+      const btn = e.currentTarget || e.target;
+      btn.innerText = '✅ 已复制';
+      setTimeout(() => {
+        btn.innerText = '📋 复制';
+      }, 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  });
+
+  document.getElementById('ip-refresh-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget || e.target;
+    btn.classList.add('ip-spinner');
+    btn.disabled = true;
+    try {
+      const newInfo = await api.getIpInfo();
+      if (newInfo && !newInfo.error) {
+        currentIpInfo = newInfo;
+        renderIpBadge(newInfo);
+        fillPopupContent(newInfo);
+        if (newInfo.lat !== null && newInfo.lon !== null) {
+          await loadLeaflet();
+          renderMiniMap(newInfo.lat, newInfo.lon);
+        }
+      }
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    } finally {
+      btn.classList.remove('ip-spinner');
+      btn.disabled = false;
+    }
+  });
+}
+
+async function initIpBadge() {
+  const container = document.getElementById('ip-badge');
+  const popup = document.getElementById('ip-popup');
+  if (!container || !popup) return;
 
   container.innerHTML = '<span class="ip-loading">IP 检测中...</span>';
 
@@ -688,35 +929,38 @@ async function initIpBadge() {
       return;
     }
 
-    let badgeClass = 'ip-clean';
-    let statusText = '纯净';
-    let statusEmoji = '🟢';
+    currentIpInfo = info;
+    renderIpBadge(info);
 
-    if (info.level === 'danger') {
-      badgeClass = 'ip-danger';
-      statusText = '高风险';
-      statusEmoji = '🔴';
-    } else if (info.level === 'suspicious') {
-      badgeClass = 'ip-suspicious';
-      statusText = '中风险';
-      statusEmoji = '🟡';
-    }
+    container.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (popup.style.display === 'none') {
+        fillPopupContent(currentIpInfo);
+        popup.style.display = 'flex';
+        
+        if (currentIpInfo.lat !== null && currentIpInfo.lon !== null) {
+          try {
+            await loadLeaflet();
+            renderMiniMap(currentIpInfo.lat, currentIpInfo.lon);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      } else {
+        popup.style.display = 'none';
+      }
+    });
 
-    const geoParts = [];
-    if (info.country) geoParts.push(info.country);
-    if (info.region) geoParts.push(info.region);
-    if (info.city) geoParts.push(info.city);
-    const geoText = geoParts.join(' ');
+    document.addEventListener('click', (e) => {
+      if (!popup.contains(e.target) && !container.contains(e.target)) {
+        popup.style.display = 'none';
+      }
+    });
 
-    const tooltip = `IP: ${info.ip}\n位置: ${geoText}\nISP: ${info.isp}\nCF威胁分: ${info.threat_score}\n代理/VPN: ${info.is_proxy ? '检测到' : '未检测到'}`;
+    popup.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
 
-    container.innerHTML = `
-      <div class="ip-badge ${badgeClass}" title="${escapeHtml(tooltip)}">
-        <span class="ip-emoji">${statusEmoji}</span>
-        <span class="ip-text">${escapeHtml(info.ip)}</span>
-        <span class="ip-status-text">${statusText}</span>
-      </div>
-    `;
   } catch (err) {
     console.error('Failed to init IP badge:', err);
     container.innerHTML = '<span class="ip-err" title="连接API失败">⚠️ 无法检测</span>';
