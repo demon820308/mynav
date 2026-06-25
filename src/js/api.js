@@ -103,5 +103,5 @@ export const api = {
     headers: authHeaders(),
   }),
   getGithubTabData: (tabKey) => request(`/github-tab?tab=${tabKey}`),
-  getIpInfo: () => request('/ip-check'),
+  getIpInfo: (ip) => request(`/ip-check${ip ? `?ip=${ip}` : ''}`),
 };

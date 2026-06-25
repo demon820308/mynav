@@ -677,6 +677,22 @@ function formatNumber(n) {
   return String(n);
 }
 
+async function getClientIpv4() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    const res = await fetch('https://api4.ipify.org?format=json', { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      return data.ip;
+    }
+  } catch (err) {
+    console.warn('Failed to fetch IPv4 from ipify:', err);
+  }
+  return null;
+}
+
 let leafletPromise = null;
 
 function loadLeaflet() {
@@ -898,7 +914,8 @@ function fillPopupContent(info) {
     btn.classList.add('ip-spinner');
     btn.disabled = true;
     try {
-      const newInfo = await api.getIpInfo();
+      const ipv4 = await getClientIpv4();
+      const newInfo = await api.getIpInfo(ipv4);
       if (newInfo && !newInfo.error) {
         currentIpInfo = newInfo;
         renderIpBadge(newInfo);
@@ -925,7 +942,8 @@ async function initIpBadge() {
   container.innerHTML = '<span class="ip-loading">IP 检测中...</span>';
 
   try {
-    const info = await api.getIpInfo();
+    const ipv4 = await getClientIpv4();
+    const info = await api.getIpInfo(ipv4);
     if (!info || info.error) {
       container.innerHTML = '<span class="ip-err" title="获取IP纯净度失败">⚠️ IP获取失败</span>';
       return;

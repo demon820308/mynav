@@ -10,7 +10,14 @@ export async function onRequest(context) {
   }
 
   try {
-    let ip = request.headers.get('cf-connecting-ip');
+    const url = new URL(request.url);
+    let ip = url.searchParams.get('ip');
+    if (ip && !/^[0-9a-fA-F.:]+$/.test(ip)) {
+      ip = null;
+    }
+    if (!ip) {
+      ip = request.headers.get('cf-connecting-ip');
+    }
     let country = request.headers.get('cf-ipcountry') || 'Unknown';
     const threatScore = parseInt(request.headers.get('cf-threat-score') || '0', 10);
     const continent = request.headers.get('cf-ipcontinent') || '';
