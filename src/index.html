@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dEmOn - 个人导航</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="/" class="logo">🧭 dEmOn - 个人导航</a>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="搜索导航..." autocomplete="off">
+      </div>
+      <div class="header-actions">
+        <div id="ip-badge" class="ip-badge-container"></div>
+        <button class="theme-toggle" title="切换主题">🌙</button>
+        <button id="edit-toggle" class="btn btn-ghost btn-sm">✏️ 编辑</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+         </section>
+
+    <div id="content">
+      <div class="empty-state">加载中...</div>
+    </div>
+
+    <section class="github-section" id="github-section" style="display:none;">
+      <div class="category-header">
+        <span class="category-icon">🔥</span>
+        <h2 class="category-title">GitHub</h2>
+        <div class="github-tabs" id="github-tab-buttons"></div>
+      </div>
+      <div id="github-panels"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Built with Cloudflare Pages & D1
+  </footer>
+
+  <button id="back-to-top" class="back-to-top" title="返回顶部">↑</button>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div id="modal-panel" class="modal-panel">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+</body>
+</html>

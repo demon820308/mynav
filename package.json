@@ -1,0 +1,21 @@
+{
+  "name": "nav",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:ui": "vite",
+    "dev:api": "npx wrangler pages dev dist --d1=DB:nav-db --compatibility-date=2024-01-01 --port 8788",
+    "build": "vite build",
+    "preview": "vite preview",
+    "db:init": "wrangler d1 execute nav-db --file=schema.sql",
+    "db:seed": "wrangler d1 execute nav-db --file=seed.sql",
+    "db:init:local": "wrangler d1 execute nav-db --local --file=schema.sql",
+    "db:seed:local": "wrangler d1 execute nav-db --local --file=seed.sql",
+    "deploy": "vite build && wrangler pages deploy dist"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "wrangler": "^3.0.0"
+  }
+}

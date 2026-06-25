@@ -1,0 +1,726 @@
+import '../css/variables.css';
+import '../css/base.css';
+import '../css/components.css';
+
+import { api } from './api.js';
+import { initTheme } from './theme.js';
+import { isFavorite, toggleFavorite } from './favorites.js';
+import { escapeHtml } from './utils.js';
+
+let allLinks = [];
+let allCategories = [];
+let editMode = false;
+let dragState = null;
+
+async function init() {
+  initTheme();
+  initBackToTop();
+  initSearch();
+  initEditMode();
+  initModal();
+  initIpBadge();
+
+  await loadData();
+  initGithubTabs();
+}
+
+async function loadData() {
+  try {
+    const [categories, links] = await Promise.all([
+      api.getCategories(),
+      api.getLinks(),
+    ]);
+    allCategories = categories;
+    allLinks = links;
+    renderCategories(categories, links);
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state">加载失败: ${e.message}</div>`;
+  }
+}
+
+// ── Edit Mode ──
+
+function initEditMode() {
+  const btn = document.getElementById('edit-toggle');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    if (editMode) {
+      editMode = false;
+      btn.textContent = '✏️ 编辑';
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-ghost');
+      renderCategories(allCategories, allLinks);
+      return;
+    }
+
+    if (!api.isLoggedIn()) {
+      showLoginModal();
+      return;
+    }
+
+    editMode = true;
+    btn.textContent = '✅ 完成';
+    btn.classList.remove('btn-ghost');
+    btn.classList.add('btn-primary');
+    renderCategories(allCategories, allLinks);
+  });
+}
+
+// ── Render ──
+
+function renderCategories(categories, links) {
+  const container = document.getElementById('content');
+
+  if (!links.length && !editMode) {
+    container.innerHTML = '<div class="empty-state">暂无导航链接</div>';
+    return;
+  }
+
+  // Ensure links are sorted by sort_order
+  const sortedLinks = [...links].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+  const grouped = {};
+  for (const cat of categories) {
+    grouped[cat.id] = { ...cat, links: [] };
+  }
+  for (const link of sortedLinks) {
+    if (grouped[link.category_id]) {
+      grouped[link.category_id].links.push(link);
+    }
+  }
+
+  const groups = Object.values(grouped).filter(g => g.links.length > 0 || editMode);
+
+  const html = groups.map(group => `
+    <section class="category fade-in" data-category-id="${group.id}">
+      <div class="category-header">
+        <span class="category-icon">${escapeHtml(group.icon) || '📁'}</span>
+        <h2 class="category-title">${escapeHtml(group.name)}</h2>
+        ${editMode ? `
+          <div class="category-actions">
+            <button class="btn btn-ghost btn-sm" data-action="edit-cat" data-id="${group.id}" title="编辑分类">⚙️</button>
+            <button class="btn btn-ghost btn-sm" data-action="delete-cat" data-id="${group.id}" data-name="${escapeHtml(group.name)}" title="删除分类">🗑️</button>
+          </div>
+        ` : ''}
+      </div>
+      <div class="links-grid" data-category-id="${group.id}">
+        ${group.links.map(link => renderLinkCard(link)).join('')}
+        ${editMode ? `
+          <button class="link-card link-card-add" data-action="add-link" data-category-id="${group.id}">
+            <div class="link-favicon-fallback" style="background: var(--color-border);">+</div>
+            <div class="link-info">
+              <div class="link-title">添加链接</div>
+            </div>
+          </button>
+        ` : ''}
+      </div>
+    </section>
+  `).join('');
+
+  container.innerHTML = html;
+
+  if (editMode && categories.length > 0) {
+    const addCatBtn = `<div style="text-align:center; margin: 16px 0;">
+      <button class="btn btn-ghost" data-action="add-cat">+ 添加分类</button>
+    </div>`;
+    container.innerHTML += addCatBtn;
+  }
+
+  bindEvents();
+}
+
+function renderLinkCard(link) {
+  const fav = isFavorite(link.id);
+  const faviconHtml = link.favicon_url
+    ? `<img class="link-favicon" src="${escapeHtml(link.favicon_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  // Single char, but still escape in case title starts with '<'
+  const fallbackLetter = escapeHtml(link.title.charAt(0).toUpperCase());
+  return `
+    <div class="link-card ${editMode ? 'link-card-editable' : ''}"
+         data-link-id="${link.id}" data-category-id="${link.category_id}">
+      ${editMode ? '<div class="drag-handle" title="按住拖拽排序">⋮⋮</div>' : ''}
+      ${faviconHtml}
+      <div class="link-favicon-fallback" ${link.favicon_url ? 'style="display:none"' : ''}>${fallbackLetter}</div>
+      <div class="link-info">
+        <div class="link-title">${escapeHtml(link.title)}</div>
+        <div class="link-desc">${escapeHtml(link.description || '')}</div>
+      </div>
+      ${editMode ? `
+        <div class="card-edit-actions">
+          <button class="btn btn-ghost btn-sm" data-action="edit-link" data-id="${link.id}" title="编辑">✏️</button>
+          <button class="btn btn-danger btn-sm" data-action="delete-link" data-id="${link.id}" data-title="${escapeHtml(link.title)}" title="删除">🗑️</button>
+        </div>
+      ` : `
+        <button class="link-fav ${fav ? 'active' : ''}" data-id="${link.id}" title="收藏">${fav ? '★' : '☆'}</button>
+      `}
+    </div>
+  `;
+}
+
+// ── Events ──
+
+function bindEvents() {
+  // Favorites
+  document.querySelectorAll('.link-fav').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = Number(btn.dataset.id);
+      const added = toggleFavorite(id);
+      btn.textContent = added ? '★' : '☆';
+      btn.classList.toggle('active', added);
+    });
+  });
+
+  // Non-edit mode: click card to open
+  if (!editMode) {
+    document.querySelectorAll('.link-card[data-link-id]').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.link-fav')) return;
+        const link = allLinks.find(l => l.id === Number(card.dataset.linkId));
+        if (link) window.open(link.url, '_blank');
+      });
+    });
+  }
+
+  // Edit mode actions
+  if (editMode) {
+    document.querySelectorAll('[data-action]').forEach(el => {
+      el.addEventListener('click', handleAction);
+    });
+    initDragAndDrop();
+  }
+}
+
+function handleAction(e) {
+  const el = e.currentTarget;
+  const action = el.dataset.action;
+
+  switch (action) {
+    case 'add-link':
+      showLinkModal({ category_id: Number(el.dataset.categoryId) });
+      break;
+    case 'edit-link': {
+      const link = allLinks.find(l => l.id === Number(el.dataset.id));
+      if (link) showLinkModal(link);
+      break;
+    }
+    case 'delete-link':
+      deleteLink(Number(el.dataset.id), el.dataset.title);
+      break;
+    case 'add-cat':
+      showCategoryModal();
+      break;
+    case 'edit-cat': {
+      const cat = allCategories.find(c => c.id === Number(el.dataset.id));
+      if (cat) showCategoryModal(cat);
+      break;
+    }
+    case 'delete-cat':
+      deleteCategory(Number(el.dataset.id), el.dataset.name);
+      break;
+  }
+}
+
+// ── Drag & Drop (swap on release) ──
+//
+// Interaction: drag a card and hover over another card in the SAME category.
+// On mouse release the two cards swap positions. No cross-category movement.
+// The hovered card is highlighted so the user always knows what will swap.
+
+function initDragAndDrop() {
+  document.querySelectorAll('.drag-handle').forEach(handle => {
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      startDrag(e, handle);
+    });
+  });
+}
+
+function startDrag(e, handle) {
+  const card = handle.closest('.link-card[data-link-id]');
+  if (!card) return;
+
+  const rect = card.getBoundingClientRect();
+  const ghost = card.cloneNode(true);
+  ghost.className = 'link-card drag-ghost';
+  ghost.style.width = rect.width + 'px';
+  ghost.style.left  = (e.clientX - rect.width  / 2) + 'px';
+  ghost.style.top   = (e.clientY - rect.height / 2) + 'px';
+  document.body.appendChild(ghost);
+
+  card.style.opacity = '0.3';
+
+  // swapTarget: the card currently under the cursor (null when none)
+  dragState = { card, ghost, moved: false, swapTarget: null };
+
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup',   onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!dragState) return;
+  e.preventDefault();
+  dragState.moved = true;
+
+  const { ghost, card } = dragState;
+  ghost.style.left = (e.clientX - ghost.offsetWidth  / 2) + 'px';
+  ghost.style.top  = (e.clientY - ghost.offsetHeight / 2) + 'px';
+
+  // Only look for swap targets within the same category grid
+  const sourceGrid = card.closest('.links-grid');
+  if (!sourceGrid) return;
+
+  let newTarget = null;
+  const siblings = [...sourceGrid.querySelectorAll('.link-card[data-link-id]')]
+    .filter(c => c !== card);
+
+  for (const c of siblings) {
+    const r = c.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right &&
+        e.clientY >= r.top  && e.clientY <= r.bottom) {
+      newTarget = c;
+      break;
+    }
+  }
+
+  // Update the highlighted swap target
+  if (dragState.swapTarget !== newTarget) {
+    if (dragState.swapTarget) dragState.swapTarget.classList.remove('drop-target');
+    if (newTarget)            newTarget.classList.add('drop-target');
+    dragState.swapTarget = newTarget;
+  }
+}
+
+function onDragEnd() {
+  if (!dragState) return;
+
+  const { card, ghost, swapTarget } = dragState;
+
+  ghost.remove();
+  card.style.opacity = '';
+  if (swapTarget) swapTarget.classList.remove('drop-target');
+
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('mouseup',   onDragEnd);
+
+  if (dragState.moved && swapTarget) {
+    const grid = card.closest('.links-grid');
+    // Guard: only swap within the same grid
+    if (grid && grid === swapTarget.closest('.links-grid')) {
+      // Standard placeholder-based DOM swap
+      // Before: [... A ... B ...]  → After: [... B ... A ...]
+      const placeholder = document.createElement('div');
+      grid.insertBefore(placeholder, card);       // mark A's slot
+      grid.insertBefore(card, swapTarget);        // move A to B's position
+      grid.insertBefore(swapTarget, placeholder); // move B to A's old slot
+      placeholder.remove();
+
+      saveOrder(grid);
+    }
+  }
+
+  dragState = null;
+}
+
+async function saveOrder(grid) {
+  const newCategoryId = Number(grid.dataset.categoryId);
+  const cards = grid.querySelectorAll('.link-card[data-link-id]');
+  const items = [];
+
+  cards.forEach((c, index) => {
+    items.push({
+      id: Number(c.dataset.linkId),
+      category_id: newCategoryId,
+      sort_order: index + 1,
+    });
+    c.dataset.categoryId = newCategoryId;
+  });
+
+  try {
+    await api.adminUpdateSort(items);
+    allLinks = allLinks.map(l => {
+      const updated = items.find(i => i.id === l.id);
+      if (updated) return { ...l, category_id: updated.category_id, sort_order: updated.sort_order };
+      return l;
+    });
+    allLinks.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  } catch (err) {
+    console.error('Sort update failed:', err);
+    // Do NOT call loadData() here — that would snap the cards back to server
+    // state, making the swap appear to have failed visually. The DOM already
+    // reflects the new order; the user can refresh if a permanent reset is needed.
+    alert('排序保存失败: ' + err.message);
+  }
+}
+
+// ── Modal ──
+
+function initModal() {
+  const overlay = document.getElementById('modal-overlay');
+  if (!overlay) return;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) hideModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideModal();
+  });
+}
+
+function showModal(title, content) {
+  const overlay = document.getElementById('modal-overlay');
+  const panel = document.getElementById('modal-panel');
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = content;
+  overlay.style.display = 'flex';
+  panel.classList.add('fade-in');
+}
+
+function hideModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+function showLoginModal() {
+  showModal('管理员登录', `
+    <form id="modal-login-form" style="display:flex;flex-direction:column;gap:12px;">
+      <input type="password" id="modal-password" placeholder="输入管理密码" required autofocus>
+      <p id="modal-login-err" style="color:var(--color-danger);font-size:13px;display:none;"></p>
+      <button type="submit" class="btn btn-primary" style="width:100%;">登录</button>
+    </form>
+  `);
+
+  document.getElementById('modal-login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById('modal-password').value;
+    const errEl = document.getElementById('modal-login-err');
+    errEl.style.display = 'none';
+    try {
+      const { token } = await api.adminLogin(pw);
+      localStorage.setItem('admin_token', token);
+      hideModal();
+      editMode = true;
+      const btn = document.getElementById('edit-toggle');
+      btn.textContent = '✅ 完成';
+      btn.classList.remove('btn-ghost');
+      btn.classList.add('btn-primary');
+      renderCategories(allCategories, allLinks);
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.style.display = 'block';
+    }
+  });
+}
+
+function showLinkModal(link = {}) {
+  const isEdit = !!link.id;
+  const catOptions = allCategories.map(c =>
+    `<option value="${c.id}" ${c.id === (link.category_id || allCategories[0]?.id) ? 'selected' : ''}>${c.icon} ${c.name}</option>`
+  ).join('');
+
+  showModal(isEdit ? '编辑链接' : '添加链接', `
+    <form id="modal-link-form" style="display:flex;flex-direction:column;gap:12px;">
+      <input type="hidden" id="mlink-id" value="${link.id || ''}">
+      <div>
+        <label class="form-label">标题 *</label>
+        <input type="text" id="mlink-title" value="${link.title || ''}" placeholder="网站名称" required>
+      </div>
+      <div>
+        <label class="form-label">URL *</label>
+        <input type="url" id="mlink-url" value="${link.url || ''}" placeholder="https://example.com" required>
+      </div>
+      <div>
+        <label class="form-label">描述</label>
+        <input type="text" id="mlink-desc" value="${link.description || ''}" placeholder="简短描述">
+      </div>
+      <div>
+        <label class="form-label">分类 *</label>
+        <select id="mlink-category">${catOptions}</select>
+      </div>
+      <div>
+        <label class="form-label">图标 URL（留空自动获取）</label>
+        <input type="url" id="mlink-favicon" value="${link.favicon_url || ''}" placeholder="自动获取">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-overlay').style.display='none'">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  `);
+
+  document.getElementById('modal-link-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('mlink-id').value;
+    const data = {
+      title: document.getElementById('mlink-title').value,
+      url: document.getElementById('mlink-url').value,
+      description: document.getElementById('mlink-desc').value,
+      category_id: Number(document.getElementById('mlink-category').value),
+      favicon_url: document.getElementById('mlink-favicon').value || undefined,
+      sort_order: 0,
+    };
+
+    try {
+      if (id) {
+        data.id = Number(id);
+        await api.adminUpdateLink(data);
+      } else {
+        await api.adminCreateLink(data);
+      }
+      hideModal();
+      await loadData();
+    } catch (err) {
+      alert('保存失败: ' + err.message);
+    }
+  });
+}
+
+function showCategoryModal(cat = {}) {
+  const isEdit = !!cat.id;
+  showModal(isEdit ? '编辑分类' : '添加分类', `
+    <form id="modal-cat-form" style="display:flex;flex-direction:column;gap:12px;">
+      <input type="hidden" id="mcat-id" value="${cat.id || ''}">
+      <div>
+        <label class="form-label">名称 *</label>
+        <input type="text" id="mcat-name" value="${cat.name || ''}" placeholder="分类名称" required>
+      </div>
+      <div>
+        <label class="form-label">图标（emoji）</label>
+        <input type="text" id="mcat-icon" value="${cat.icon || ''}" placeholder="🌐">
+      </div>
+      <div>
+        <label class="form-label">Slug *</label>
+        <input type="text" id="mcat-slug" value="${cat.slug || ''}" placeholder="category-slug" required>
+      </div>
+      <div>
+        <label class="form-label">排序</label>
+        <input type="number" id="mcat-sort" value="${cat.sort_order ?? 0}" placeholder="0">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-overlay').style.display='none'">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  `);
+
+  document.getElementById('modal-cat-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('mcat-id').value;
+    const data = {
+      name: document.getElementById('mcat-name').value,
+      icon: document.getElementById('mcat-icon').value,
+      slug: document.getElementById('mcat-slug').value,
+      sort_order: Number(document.getElementById('mcat-sort').value) || 0,
+    };
+
+    try {
+      if (id) {
+        data.id = Number(id);
+        await api.adminUpdateCategory(data);
+      } else {
+        await api.adminCreateCategory(data);
+      }
+      hideModal();
+      await loadData();
+    } catch (err) {
+      alert('保存失败: ' + err.message);
+    }
+  });
+}
+
+async function deleteLink(id, title) {
+  if (!confirm(`确定删除「${title}」？`)) return;
+  try {
+    await api.adminDeleteLink(id);
+    await loadData();
+  } catch (err) {
+    alert('删除失败: ' + err.message);
+  }
+}
+
+async function deleteCategory(id, name) {
+  if (!confirm(`确定删除分类「${name}」？该分类下的链接也会被删除。`)) return;
+  try {
+    await api.adminDeleteCategory(id);
+    await loadData();
+  } catch (err) {
+    alert('删除失败: ' + err.message);
+  }
+}
+
+// ── Search ──
+
+function initSearch() {
+  const input = document.getElementById('search-input');
+  if (!input) return;
+
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) {
+        renderCategories(allCategories, allLinks);
+        return;
+      }
+      const filtered = allLinks.filter(l =>
+        l.title.toLowerCase().includes(q) ||
+        (l.description && l.description.toLowerCase().includes(q))
+      );
+      renderCategories(allCategories, filtered);
+    }, 200);
+  });
+}
+
+// ── Back to top ──
+
+function initBackToTop() {
+  const btn = document.getElementById('back-to-top');
+  if (!btn) return;
+
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 300);
+  });
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// ── GitHub Tabs ──
+
+let githubTabs = [];
+let activeTabKey = null;
+
+async function initGithubTabs() {
+  try {
+    const tabs = await api.getGithubTabs();
+    githubTabs = tabs.filter(t => t.enabled);
+
+    if (!githubTabs.length) {
+      document.getElementById('github-section').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('github-section').style.display = '';
+    renderTabButtons(githubTabs);
+    activeTabKey = githubTabs[0].tab_key;
+    renderTabContent(activeTabKey);
+  } catch (e) {
+    console.error('Failed to load GitHub tabs:', e);
+  }
+}
+
+function renderTabButtons(tabs) {
+  const container = document.getElementById('github-tab-buttons');
+  container.innerHTML = tabs.map(t => {
+    return `<button class="github-tab${t.tab_key === activeTabKey ? ' active' : ''}" data-tab="${t.tab_key}">${t.name}</button>`;
+  }).join('');
+
+  container.querySelectorAll('.github-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.github-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTabContent(btn.dataset.tab);
+    });
+  });
+}
+
+async function renderTabContent(tabKey) {
+  const container = document.getElementById('github-panels');
+  const tab = githubTabs.find(t => t.tab_key === tabKey);
+  if (!tab) return;
+
+  container.innerHTML = '<div class="empty-state">加载中...</div>';
+
+  try {
+    const { items } = await api.getGithubTabData(tabKey);
+
+    if (!items || !items.length) {
+      container.innerHTML = '<div class="empty-state">暂无数据</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="links-grid github-grid-20">
+        ${items.map(r => {
+          const fullName = r.name || r.repo || r.topic || '';
+          const parts = fullName.split('/');
+          const repoName = parts.length > 1 ? parts[1] : fullName;
+          const owner = parts.length > 1 ? parts[0] : '';
+          return `
+          <a href="${r.url || r.repo_url || r.topic_url || '#'}" target="_blank" rel="noopener" class="github-card fade-in">
+            <div class="github-repo">${repoName}</div>
+            ${owner ? `<div class="github-owner">${owner}</div>` : ''}
+            <div class="github-desc">${r.description || ''}</div>
+            <div class="github-meta">
+              <span>⭐ ${formatNumber(r.stars)}</span>
+              ${r.language ? `<span>${r.language}</span>` : ''}
+            </div>
+          </a>`;
+        }).join('')}
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<div class="empty-state">加载失败: ${e.message}</div>`;
+  }
+}
+
+function formatNumber(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return String(n);
+}
+
+async function initIpBadge() {
+  const container = document.getElementById('ip-badge');
+  if (!container) return;
+
+  container.innerHTML = '<span class="ip-loading">IP 检测中...</span>';
+
+  try {
+    const info = await api.getIpInfo();
+    if (!info || info.error) {
+      container.innerHTML = '<span class="ip-err" title="获取IP纯净度失败">⚠️ IP获取失败</span>';
+      return;
+    }
+
+    let badgeClass = 'ip-clean';
+    let statusText = '纯净';
+    let statusEmoji = '🟢';
+
+    if (info.level === 'danger') {
+      badgeClass = 'ip-danger';
+      statusText = '高风险';
+      statusEmoji = '🔴';
+    } else if (info.level === 'suspicious') {
+      badgeClass = 'ip-suspicious';
+      statusText = '中风险';
+      statusEmoji = '🟡';
+    }
+
+    const geoParts = [];
+    if (info.country) geoParts.push(info.country);
+    if (info.region) geoParts.push(info.region);
+    if (info.city) geoParts.push(info.city);
+    const geoText = geoParts.join(' ');
+
+    const tooltip = `IP: ${info.ip}\n位置: ${geoText}\nISP: ${info.isp}\nCF威胁分: ${info.threat_score}\n代理/VPN: ${info.is_proxy ? '检测到' : '未检测到'}`;
+
+    container.innerHTML = `
+      <div class="ip-badge ${badgeClass}" title="${escapeHtml(tooltip)}">
+        <span class="ip-emoji">${statusEmoji}</span>
+        <span class="ip-text">${escapeHtml(info.ip)}</span>
+        <span class="ip-status-text">${statusText}</span>
+      </div>
+    `;
+  } catch (err) {
+    console.error('Failed to init IP badge:', err);
+    container.innerHTML = '<span class="ip-err" title="连接API失败">⚠️ 无法检测</span>';
+  }
+}
+
+init();

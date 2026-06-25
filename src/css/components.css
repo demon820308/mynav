@@ -1,0 +1,646 @@
+.header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-box input {
+  padding-left: 36px;
+  height: 40px;
+}
+
+.search-box svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all var(--transition);
+}
+
+.theme-toggle:hover {
+  background: var(--color-bg-soft);
+}
+
+.hero {
+  text-align: center;
+  padding: 32px 0 10px;
+}
+
+.hero h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin-bottom: 8px;
+}
+
+.hero p {
+  color: var(--color-muted);
+  font-size: 16px;
+}
+
+.category {
+  margin-bottom: 40px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.category-icon {
+  font-size: 20px;
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.link-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.link-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  color: inherit;
+}
+
+.link-favicon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: var(--color-bg-soft);
+}
+
+.link-favicon-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.link-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.link-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-desc {
+  font-size: 12px;
+  color: var(--color-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-fav {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.4;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.link-fav:hover {
+  opacity: 1;
+  background: var(--color-bg-soft);
+}
+
+.link-fav.active {
+  opacity: 1;
+}
+
+.github-section {
+  margin-top: 48px;
+  margin-bottom: 48px;
+}
+
+.github-section .category-header {
+  border-color: var(--color-border);
+}
+
+.github-tabs {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.github-tab {
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.github-tab.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.github-tab:hover:not(.active) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.skill-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
+  text-decoration: none;
+  color: inherit;
+}
+
+.skill-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  color: inherit;
+}
+
+.skill-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.skill-desc {
+  font-size: 12px;
+  color: var(--color-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.skill-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.skill-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.skill-repos {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--color-bg-soft);
+  border-radius: var(--radius-pill);
+  color: var(--color-muted);
+}
+
+.github-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
+  text-decoration: none;
+  color: inherit;
+  min-height: 120px;
+}
+
+.github-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  color: inherit;
+}
+
+.github-grid-20 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.github-repo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.github-owner {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.github-desc {
+  font-size: 12px;
+  color: var(--color-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.github-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.github-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-muted);
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--transition);
+  font-size: 20px;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.back-to-top:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+}
+
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--color-muted);
+  font-size: 13px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Edit Mode ── */
+
+.category-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.link-card-editable {
+  cursor: default;
+  position: relative;
+}
+
+.link-card-editable:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--color-muted);
+  font-size: 20px;
+  padding: 6px 4px;
+  user-select: none;
+  flex-shrink: 0;
+  line-height: 1;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.drag-handle:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-soft);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.card-edit-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.link-card-drag-source {
+  opacity: 0.3;
+  border-style: dashed;
+}
+
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0.9;
+  transform: rotate(2deg) scale(1.02);
+  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: none;
+}
+
+.drop-indicator {
+  position: fixed;
+  width: 3px;
+  background: var(--color-primary);
+  border-radius: 2px;
+  z-index: 9999;
+  pointer-events: none;
+  /* No transition — avoids visual lag when following the cursor */
+}
+
+/* Highlighted when a dragged card hovers over it as the swap target */
+.link-card.drop-target {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  transform: scale(1.03);
+  transition: transform 0.1s, outline 0.1s;
+}
+
+.link-card-add {
+  border: 2px dashed var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  justify-content: center;
+  color: var(--color-muted);
+}
+
+.link-card-add:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── Modal ── */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-panel h3 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  color: var(--color-ink);
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  color: var(--color-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .github-grid-20 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .header-inner {
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    order: 3;
+    max-width: 100%;
+    flex-basis: 100%;
+  }
+
+  .hero h1 {
+    font-size: 24px;
+  }
+
+  .links-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .github-grid-20 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── IP Purity Badge ── */
+.ip-badge-container {
+  display: flex;
+  align-items: center;
+}
+
+.ip-loading, .ip-err {
+  font-size: 13px;
+  color: var(--color-muted);
+  padding: 6px 12px;
+}
+
+.ip-err {
+  color: var(--color-danger);
+}
+
+.ip-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: help;
+  transition: all var(--transition);
+  border: 1px solid transparent;
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+}
+
+.ip-badge.ip-clean {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.ip-badge.ip-suspicious {
+  border-color: rgba(234, 179, 8, 0.2);
+  background: rgba(234, 179, 8, 0.05);
+}
+
+.ip-badge.ip-danger {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.ip-badge:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.ip-status-text {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.ip-clean .ip-status-text {
+  background: rgba(34, 197, 94, 0.15);
+  color: rgb(21, 128, 61);
+}
+
+.ip-suspicious .ip-status-text {
+  background: rgba(234, 179, 8, 0.15);
+  color: rgb(161, 98, 7);
+}
+
+.ip-danger .ip-status-text {
+  background: rgba(239, 68, 68, 0.15);
+  color: rgb(185, 28, 28);
+}
+
