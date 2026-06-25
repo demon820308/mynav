@@ -769,8 +769,10 @@ function renderIpBadge(info) {
     statusEmoji = '🟡';
   }
 
+  const tooltip = `${info.country || ''} ${info.city || ''}`.trim() || '未知位置';
+
   container.innerHTML = `
-    <div class="ip-badge ${badgeClass}" style="cursor: pointer;">
+    <div class="ip-badge ${badgeClass}" style="cursor: pointer;" title="${escapeHtml(tooltip)}">
       <span class="ip-emoji">${statusEmoji}</span>
       <span class="ip-text">${escapeHtml(info.ip)}</span>
       <span class="ip-status-text">${statusText}</span>
