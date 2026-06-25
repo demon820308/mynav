@@ -31,7 +31,7 @@ export async function onRequest(context) {
           return jsonResponse({ error: 'title, url, category_id required' }, 400);
         }
 
-        const autoFavicon = favicon_url || `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`;
+        const autoFavicon = favicon_url || `https://www.faviconextractor.com/favicon/${new URL(url).hostname}?larger=true`;
 
         const result = await env.DB.prepare(
           `INSERT INTO links (title, url, description, category_id, favicon_url, sort_order)
@@ -49,7 +49,7 @@ export async function onRequest(context) {
           return jsonResponse({ error: 'id required' }, 400);
         }
 
-        const autoFavicon = favicon_url || (url ? `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64` : '');
+        const autoFavicon = favicon_url || (url ? `https://www.faviconextractor.com/favicon/${new URL(url).hostname}?larger=true` : '');
 
         await env.DB.prepare(
           `UPDATE links SET
