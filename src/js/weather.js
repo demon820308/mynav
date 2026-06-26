@@ -34,14 +34,28 @@ function getWmoInfo(code) {
 }
 
 async function getUserLocation() {
-  if (!navigator.geolocation) return null;
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => resolve(null),
-      { timeout: 3000, enableHighAccuracy: false }
-    );
-  });
+  if (navigator.geolocation) {
+    const geoLoc = await new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        () => resolve(null),
+        { timeout: 3000, enableHighAccuracy: false }
+      );
+    });
+    if (geoLoc) return geoLoc;
+  }
+
+  try {
+    const res = await fetch('/api/ip-check');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.lat !== null && data.lon !== null) {
+        return { lat: data.lat, lon: data.lon };
+      }
+    }
+  } catch (e) {}
+
+  return null;
 }
 
 async function fetchWeather(lat, lon) {
@@ -96,7 +110,7 @@ export async function initWeather() {
   try {
     const loc = await getUserLocation();
     if (!loc) {
-      container.innerHTML = '<span class="weather-err">📍 无法获取位置</span>';
+      container.innerHTML = '<span class="weather-err">📍 无法定位</span>';
       return;
     }
 
