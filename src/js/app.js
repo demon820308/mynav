@@ -5,7 +5,7 @@ import '../css/components.css';
 import { api } from './api.js';
 import { initTheme } from './theme.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
-import { escapeHtml, linkify } from './utils.js';
+import { escapeHtml, linkify, renderMarkdown } from './utils.js';
 
 let allLinks = [];
 let allCategories = [];
@@ -1050,7 +1050,7 @@ function renderMemos(memos) {
   const isAdmin = api.isLoggedIn();
 
   listEl.innerHTML = memos.map(memo => {
-    const formattedContent = linkify(escapeHtml(memo.content));
+    const formattedContent = renderMarkdown(memo.content);
     const titleHtml = memo.title 
       ? escapeHtml(memo.title) 
       : '<span class="memo-card-title empty">(无标题)</span>';
@@ -1080,8 +1080,13 @@ function renderMemos(memos) {
          </div>`
       : '';
 
+    const dragHandleHtml = isAdmin
+      ? '<div class="memo-drag-handle" title="按住拖拽排序">⋮⋮</div>'
+      : '';
+
     return `
       <div class="memo-card fade-in" data-id="${memo.id}">
+        ${dragHandleHtml}
         <div class="memo-card-header">
           <div class="memo-card-title-container">
             <div class="memo-card-title">${titleHtml}</div>
@@ -1100,8 +1105,8 @@ function renderMemos(memos) {
   // Bind click events on cards (for expand/collapse) and buttons
   listEl.querySelectorAll('.memo-card').forEach(card => {
     card.addEventListener('click', (e) => {
-      // If edit or delete button is clicked, do not toggle expand
-      if (e.target.closest('.memo-edit-btn') || e.target.closest('.memo-delete-btn') || e.target.tagName === 'A') {
+      // If edit, delete, or drag handle is clicked, do not toggle expand
+      if (e.target.closest('.memo-edit-btn') || e.target.closest('.memo-delete-btn') || e.target.closest('.memo-drag-handle') || e.target.tagName === 'A') {
         return;
       }
       card.classList.toggle('expanded');
@@ -1132,6 +1137,115 @@ function renderMemos(memos) {
         }
       });
     });
+
+    // ── Memo Drag & Drop (same swap pattern as links) ──
+    listEl.querySelectorAll('.memo-drag-handle').forEach(handle => {
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startMemoDrag(e, handle, listEl);
+      });
+    });
+  }
+}
+
+let memoDragState = null;
+
+function startMemoDrag(e, handle, listEl) {
+  const card = handle.closest('.memo-card');
+  if (!card) return;
+
+  const rect = card.getBoundingClientRect();
+  const ghost = card.cloneNode(true);
+  ghost.className = 'memo-card memo-drag-ghost';
+  ghost.style.width = rect.width + 'px';
+  ghost.style.left = (e.clientX - rect.width / 2) + 'px';
+  ghost.style.top = (e.clientY - rect.height / 2) + 'px';
+  document.body.appendChild(ghost);
+
+  card.style.opacity = '0.3';
+
+  memoDragState = { card, ghost, listEl, moved: false, swapTarget: null };
+
+  document.addEventListener('mousemove', onMemoDragMove);
+  document.addEventListener('mouseup', onMemoDragEnd);
+}
+
+function onMemoDragMove(e) {
+  if (!memoDragState) return;
+  e.preventDefault();
+  memoDragState.moved = true;
+
+  const { ghost } = memoDragState;
+  ghost.style.left = (e.clientX - ghost.offsetWidth / 2) + 'px';
+  ghost.style.top = (e.clientY - ghost.offsetHeight / 2) + 'px';
+
+  let newTarget = null;
+  const siblings = [...memoDragState.listEl.querySelectorAll('.memo-card[data-id]')]
+    .filter(c => c !== memoDragState.card);
+
+  for (const c of siblings) {
+    const r = c.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right &&
+        e.clientY >= r.top && e.clientY <= r.bottom) {
+      newTarget = c;
+      break;
+    }
+  }
+
+  if (memoDragState.swapTarget !== newTarget) {
+    if (memoDragState.swapTarget) memoDragState.swapTarget.classList.remove('drop-target');
+    if (newTarget) newTarget.classList.add('drop-target');
+    memoDragState.swapTarget = newTarget;
+  }
+}
+
+function onMemoDragEnd() {
+  if (!memoDragState) return;
+
+  const { card, ghost, listEl, swapTarget } = memoDragState;
+
+  ghost.remove();
+  card.style.opacity = '';
+  if (swapTarget) swapTarget.classList.remove('drop-target');
+
+  document.removeEventListener('mousemove', onMemoDragMove);
+  document.removeEventListener('mouseup', onMemoDragEnd);
+
+  if (memoDragState.moved && swapTarget) {
+    const placeholder = document.createElement('div');
+    listEl.insertBefore(placeholder, card);
+    listEl.insertBefore(card, swapTarget);
+    listEl.insertBefore(swapTarget, placeholder);
+    placeholder.remove();
+
+    saveMemoOrder(listEl);
+  }
+
+  memoDragState = null;
+}
+
+async function saveMemoOrder(listEl) {
+  const cards = listEl.querySelectorAll('.memo-card[data-id]');
+  const items = [];
+
+  cards.forEach((c, index) => {
+    items.push({
+      id: Number(c.dataset.id),
+      sort_order: index + 1,
+    });
+  });
+
+  try {
+    await api.adminUpdateMemoSort(items);
+    allMemos = allMemos.map(m => {
+      const updated = items.find(i => i.id === m.id);
+      if (updated) return { ...m, sort_order: updated.sort_order };
+      return m;
+    });
+    allMemos.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  } catch (err) {
+    console.error('Memo sort update failed:', err);
+    alert('排序保存失败: ' + err.message);
   }
 }
 
@@ -1145,8 +1259,15 @@ function showMemoModal(memo = {}) {
         <input type="text" id="mmemo-title" value="${escapeHtml(memo.title || '')}" placeholder="输入备忘标题">
       </div>
       <div>
-        <label class="form-label">内容 *</label>
-        <textarea id="mmemo-content" placeholder="输入备忘内容..." required rows="8" style="width:100%; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-bg-soft); color: var(--color-text); font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+          <label class="form-label" style="margin-bottom:0;">内容 *</label>
+          <div class="memo-editor-tabs">
+            <button type="button" class="memo-tab active" data-tab="edit">编辑</button>
+            <button type="button" class="memo-tab" data-tab="preview">预览</button>
+          </div>
+        </div>
+        <textarea id="mmemo-content" placeholder="支持 Markdown 格式：**粗体**、*斜体*、\`代码\`、- 列表、[链接](url) 等..." required rows="8" style="width:100%; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-bg-soft); color: var(--color-text); font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+        <div id="mmemo-preview" class="memo-preview-area" style="display:none;"></div>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
         <input type="checkbox" id="mmemo-private" ${memo.is_private !== 0 ? 'checked' : ''} style="width:auto; cursor:pointer;">
@@ -1159,15 +1280,31 @@ function showMemoModal(memo = {}) {
     </form>
   `);
 
-  // Textarea content setting (safely set directly to avoid HTML entity encoding issues inside textarea)
-  document.getElementById('mmemo-content').value = memo.content || '';
+  const textarea = document.getElementById('mmemo-content');
+  const previewEl = document.getElementById('mmemo-preview');
+  textarea.value = memo.content || '';
+
+  document.querySelectorAll('.memo-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.memo-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (tab.dataset.tab === 'preview') {
+        previewEl.innerHTML = renderMarkdown(textarea.value);
+        textarea.style.display = 'none';
+        previewEl.style.display = 'block';
+      } else {
+        textarea.style.display = '';
+        previewEl.style.display = 'none';
+      }
+    });
+  });
 
   document.getElementById('modal-memo-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('mmemo-id').value;
     const data = {
       title: document.getElementById('mmemo-title').value.trim(),
-      content: document.getElementById('mmemo-content').value,
+      content: textarea.value,
       is_private: document.getElementById('mmemo-private').checked ? 1 : 0
     };
 

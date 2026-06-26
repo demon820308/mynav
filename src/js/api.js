@@ -120,4 +120,9 @@ export const api = {
     method: 'DELETE',
     headers: authHeaders(),
   }),
+  adminUpdateMemoSort: (items) => request('/admin/memos', {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ action: 'sort', items }),
+  }),
 };

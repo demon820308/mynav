@@ -12,10 +12,15 @@
     "db:seed": "wrangler d1 execute nav-db --file=seed.sql",
     "db:init:local": "wrangler d1 execute nav-db --local --file=schema.sql",
     "db:seed:local": "wrangler d1 execute nav-db --local --file=seed.sql",
+    "db:migrate-memo-sort": "wrangler d1 execute nav-db --file=migrate-memo-sort.sql",
+    "db:migrate-memo-sort:local": "wrangler d1 execute nav-db --local --file=migrate-memo-sort.sql",
     "deploy": "vite build && wrangler pages deploy dist"
   },
   "devDependencies": {
     "vite": "^6.0.0",
     "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "marked": "^18.0.5"
   }
 }

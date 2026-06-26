@@ -57,6 +57,23 @@ export async function onRequest(context) {
         return jsonResponse({ success: true });
       }
 
+      case 'PATCH': {
+        const body = await request.json();
+        const { action, items } = body;
+
+        if (action !== 'sort' || !Array.isArray(items)) {
+          return jsonResponse({ error: 'Invalid sort payload' }, 400);
+        }
+
+        const stmts = items.map(item =>
+          env.DB.prepare('UPDATE memos SET sort_order = ? WHERE id = ?')
+            .bind(item.sort_order, item.id)
+        );
+
+        await env.DB.batch(stmts);
+        return jsonResponse({ success: true });
+      }
+
       case 'DELETE': {
         const url = new URL(request.url);
         const id = url.searchParams.get('id');
@@ -80,7 +97,7 @@ export async function onRequest(context) {
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 }

@@ -18,11 +18,11 @@ export async function onRequest(context) {
     const queryMemos = async () => {
       if (isAdmin) {
         return await env.DB.prepare(
-          'SELECT * FROM memos ORDER BY updated_at DESC, id DESC'
+          'SELECT * FROM memos ORDER BY sort_order ASC, id DESC'
         ).all();
       } else {
         return await env.DB.prepare(
-          'SELECT * FROM memos WHERE is_private = 0 ORDER BY updated_at DESC, id DESC'
+          'SELECT * FROM memos WHERE is_private = 0 ORDER BY sort_order ASC, id DESC'
         ).all();
       }
     };
@@ -39,10 +39,18 @@ export async function onRequest(context) {
             title TEXT DEFAULT '',
             content TEXT NOT NULL,
             is_private INTEGER DEFAULT 1,
+            sort_order INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now'))
           )
         `).run();
+        const res = await queryMemos();
+        results = res.results;
+      } else if (dbError.message && dbError.message.includes('no such column')) {
+        // Self-healing: add sort_order column to existing table
+        await env.DB.prepare(
+          'ALTER TABLE memos ADD COLUMN sort_order INTEGER DEFAULT 0'
+        ).run();
         const res = await queryMemos();
         results = res.results;
       } else {
