@@ -25,7 +25,7 @@
 .search-box {
   position: relative;
   flex: 1;
-  max-width: 400px;
+  max-width: 266px;
 }
 
 .search-box input {
@@ -938,6 +938,115 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* ── Weather Badge ── */
+.weather-badge-container {
+  position: relative;
+}
+
+.weather-loading, .weather-err {
+  font-size: 13px;
+  color: var(--color-muted);
+  padding: 6px 12px;
+}
+
+.weather-err {
+  color: var(--color-warning);
+}
+
+.weather-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid transparent;
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.weather-current:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.weather-icon {
+  font-size: 16px;
+}
+
+.weather-temp {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.weather-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.weather-detail {
+  font-size: 11px;
+  opacity: 0.6;
+  display: none;
+}
+
+.weather-expanded .weather-detail {
+  display: inline;
+}
+
+.weather-daily {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 12px;
+  min-width: 200px;
+  display: none;
+  z-index: 999;
+}
+
+.weather-expanded .weather-daily {
+  display: block;
+}
+
+.weather-day {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.weather-day:last-child {
+  border-bottom: none;
+}
+
+.weather-day-label {
+  width: 36px;
+  font-weight: 500;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.weather-day-icon {
+  font-size: 16px;
+}
+
+.weather-day-temp {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-muted);
 }
 
 /* ── Memo Drawer & Overlay ── */

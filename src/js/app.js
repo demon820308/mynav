@@ -4,6 +4,7 @@ import '../css/components.css';
 
 import { api } from './api.js';
 import { initTheme } from './theme.js';
+import { initWeather } from './weather.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 import { escapeHtml, linkify, renderMarkdown } from './utils.js';
 
@@ -21,6 +22,7 @@ async function init() {
   initEditMode();
   initModal();
   initIpBadge();
+  initWeather();
   initMemos();
 
   await loadData();
