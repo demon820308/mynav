@@ -104,4 +104,20 @@ export const api = {
   }),
   getGithubTabData: (tabKey) => request(`/github-tab?tab=${tabKey}`),
   getIpInfo: (ip) => request(`/ip-check${ip ? `?ip=${ip}` : ''}`),
+
+  getMemos: () => request('/memos', { headers: authHeaders() }),
+  adminCreateMemo: (data) => request('/admin/memos', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  }),
+  adminUpdateMemo: (data) => request('/admin/memos', {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  }),
+  adminDeleteMemo: (id) => request(`/admin/memos?id=${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  }),
 };

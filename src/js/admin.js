@@ -7,6 +7,7 @@ import { initTheme } from './theme.js';
 import { escapeHtml } from './utils.js';
 
 let categories = [];
+let githubTabs = [];
 
 function init() {
   initTheme();
@@ -68,6 +69,7 @@ async function loadData() {
       api.getGithubTabs(),
     ]);
     categories = cats;
+    githubTabs = tabs;
     renderCategoryOptions(cats);
     renderTable(links, cats);
     renderTopics(tabs);
@@ -318,7 +320,7 @@ function renderTopics(tabs) {
           <div style="margin-left:auto;display:flex;gap:4px;">
             <button class="btn btn-ghost btn-sm" onclick="editTab(${t.id})">编辑</button>
             <button class="btn btn-ghost btn-sm" onclick="toggleTab(${t.id},${t.enabled})">${t.enabled ? '禁用' : '启用'}</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteTab(${t.id},'${escapeHtml(t.name)}')">删除</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTab(${t.id})">删除</button>
           </div>
         </div>`).join('')}</div>`
     : '<p style="color:var(--color-muted);font-size:13px;">暂无配置，从下方模板选择或手动添加</p>';
@@ -444,7 +446,9 @@ window.toggleTab = async function(id, current) {
   }
 };
 
-window.deleteTab = async function(id, name) {
+window.deleteTab = async function(id) {
+  const tab = githubTabs.find(t => t.id === id);
+  const name = tab ? tab.name : '';
   if (!confirm(`确定删除「${name}」？`)) return;
   try {
     await api.adminDeleteTab(id);

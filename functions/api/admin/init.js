@@ -59,6 +59,14 @@ CREATE TABLE IF NOT EXISTS github_skills (
   stars INTEGER DEFAULT 0,
   fetched_at TEXT DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS memos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT DEFAULT '',
+  content TEXT NOT NULL,
+  is_private INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
 `;
 
 const SEED = `

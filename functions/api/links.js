@@ -39,8 +39,8 @@ export async function onRequest(context) {
     query += ' ORDER BY l.sort_order ASC';
 
     let stmt = env.DB.prepare(query);
-    for (const param of params) {
-      stmt = stmt.bind(param);
+    if (params.length > 0) {
+      stmt = stmt.bind(...params);
     }
 
     const { results } = await stmt.all();

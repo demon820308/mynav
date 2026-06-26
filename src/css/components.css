@@ -940,3 +940,178 @@
   }
 }
 
+/* ── Memo Drawer & Overlay ── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 900;
+  transition: opacity 0.3s ease;
+}
+
+.drawer-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.memo-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 100vw;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+}
+
+.memo-drawer.active {
+  transform: translateX(0);
+}
+
+.memo-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.memo-drawer-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--color-ink);
+}
+
+.memo-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.memo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memo-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.memo-card {
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: all var(--transition);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memo-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.memo-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.memo-card-title-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.memo-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.memo-card-title.empty {
+  font-style: italic;
+  color: var(--color-muted);
+}
+
+.memo-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.memo-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.memo-badge-private {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--color-danger);
+}
+
+.memo-badge-public {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--color-success);
+}
+
+.memo-card-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.memo-card-content {
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.memo-card.expanded .memo-card-content {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.memo-card-content a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.memo-card-content a:hover {
+  text-decoration: underline;
+}
+
+

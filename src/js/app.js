@@ -5,7 +5,7 @@ import '../css/components.css';
 import { api } from './api.js';
 import { initTheme } from './theme.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, linkify } from './utils.js';
 
 let allLinks = [];
 let allCategories = [];
@@ -21,6 +21,7 @@ async function init() {
   initEditMode();
   initModal();
   initIpBadge();
+  initMemos();
 
   await loadData();
   initGithubTabs();
@@ -985,6 +986,204 @@ async function initIpBadge() {
     console.error('Failed to init IP badge:', err);
     container.innerHTML = '<span class="ip-err" title="连接API失败">⚠️ 无法检测</span>';
   }
+}
+
+// ── Memos / Notepad ──
+
+let allMemos = [];
+
+function initMemos() {
+  const toggleBtn = document.getElementById('memo-toggle');
+  const drawer = document.getElementById('memo-drawer');
+  const closeBtn = document.getElementById('memo-drawer-close');
+  const overlay = document.getElementById('drawer-overlay');
+  const addBtn = document.getElementById('memo-add-btn');
+
+  if (!toggleBtn || !drawer || !closeBtn || !overlay) return;
+
+  toggleBtn.addEventListener('click', () => {
+    drawer.classList.add('active');
+    overlay.classList.add('active');
+    loadMemos();
+  });
+
+  closeBtn.addEventListener('click', () => {
+    drawer.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+
+  overlay.addEventListener('click', () => {
+    drawer.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+
+  addBtn.addEventListener('click', () => {
+    showMemoModal();
+  });
+}
+
+async function loadMemos() {
+  const listEl = document.getElementById('memo-list');
+  const adminActions = document.getElementById('memo-admin-actions');
+  
+  if (api.isLoggedIn()) {
+    adminActions.style.display = 'block';
+  } else {
+    adminActions.style.display = 'none';
+  }
+
+  try {
+    allMemos = await api.getMemos();
+    renderMemos(allMemos);
+  } catch (err) {
+    listEl.innerHTML = `<div class="memo-empty" style="color: var(--color-danger);">加载失败: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderMemos(memos) {
+  const listEl = document.getElementById('memo-list');
+  if (!memos || memos.length === 0) {
+    listEl.innerHTML = '<div class="memo-empty">暂无备忘录</div>';
+    return;
+  }
+
+  const isAdmin = api.isLoggedIn();
+
+  listEl.innerHTML = memos.map(memo => {
+    const formattedContent = linkify(escapeHtml(memo.content));
+    const titleHtml = memo.title 
+      ? escapeHtml(memo.title) 
+      : '<span class="memo-card-title empty">(无标题)</span>';
+    
+    // Format date nicely (assuming UTC time suffix 'Z' for ISO-like sqlite strings or localizing correctly)
+    let dateStr = '';
+    if (memo.updated_at) {
+      // sqlite datetime('now') returns 'YYYY-MM-DD HH:MM:SS' in UTC. Append ' UTC' or 'Z' for parsing.
+      const rawDateStr = memo.updated_at.includes('T') ? memo.updated_at : memo.updated_at.replace(' ', 'T') + 'Z';
+      try {
+        dateStr = new Date(rawDateStr).toLocaleString('zh-CN', { hour12: false });
+      } catch (e) {
+        dateStr = memo.updated_at;
+      }
+    }
+
+    const badgeHtml = isAdmin 
+      ? (memo.is_private 
+          ? '<span class="memo-badge memo-badge-private">🔒 私有</span>' 
+          : '<span class="memo-badge memo-badge-public">🌐 公开</span>')
+      : '';
+
+    const actionsHtml = isAdmin
+      ? `<div class="memo-card-actions">
+           <button class="btn btn-ghost btn-sm memo-edit-btn" data-id="${memo.id}" title="编辑">✏️</button>
+           <button class="btn btn-ghost btn-sm memo-delete-btn" data-id="${memo.id}" title="删除">🗑️</button>
+         </div>`
+      : '';
+
+    return `
+      <div class="memo-card fade-in" data-id="${memo.id}">
+        <div class="memo-card-header">
+          <div class="memo-card-title-container">
+            <div class="memo-card-title">${titleHtml}</div>
+            <div class="memo-card-meta">
+              <span>${escapeHtml(dateStr)}</span>
+              ${badgeHtml}
+            </div>
+          </div>
+          ${actionsHtml}
+        </div>
+        <div class="memo-card-content">${formattedContent}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Bind click events on cards (for expand/collapse) and buttons
+  listEl.querySelectorAll('.memo-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      // If edit or delete button is clicked, do not toggle expand
+      if (e.target.closest('.memo-edit-btn') || e.target.closest('.memo-delete-btn') || e.target.tagName === 'A') {
+        return;
+      }
+      card.classList.toggle('expanded');
+    });
+  });
+
+  if (isAdmin) {
+    listEl.querySelectorAll('.memo-edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = Number(btn.dataset.id);
+        const memo = allMemos.find(m => m.id === id);
+        if (memo) showMemoModal(memo);
+      });
+    });
+
+    listEl.querySelectorAll('.memo-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = Number(btn.dataset.id);
+        if (confirm('确定删除这条备忘录吗？')) {
+          try {
+            await api.adminDeleteMemo(id);
+            loadMemos();
+          } catch (err) {
+            alert('删除失败: ' + err.message);
+          }
+        }
+      });
+    });
+  }
+}
+
+function showMemoModal(memo = {}) {
+  const isEdit = !!memo.id;
+  showModal(isEdit ? '编辑备忘录' : '新建备忘录', `
+    <form id="modal-memo-form" style="display:flex;flex-direction:column;gap:12px;">
+      <input type="hidden" id="mmemo-id" value="${memo.id || ''}">
+      <div>
+        <label class="form-label">标题（可选）</label>
+        <input type="text" id="mmemo-title" value="${escapeHtml(memo.title || '')}" placeholder="输入备忘标题">
+      </div>
+      <div>
+        <label class="form-label">内容 *</label>
+        <textarea id="mmemo-content" placeholder="输入备忘内容..." required rows="8" style="width:100%; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-bg-soft); color: var(--color-text); font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="mmemo-private" ${memo.is_private !== 0 ? 'checked' : ''} style="width:auto; cursor:pointer;">
+        <label for="mmemo-private" style="font-size:13px; color:var(--color-ink); cursor:pointer; user-select:none;">仅管理员可见（私有）</label>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-overlay').style.display='none'">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  `);
+
+  // Textarea content setting (safely set directly to avoid HTML entity encoding issues inside textarea)
+  document.getElementById('mmemo-content').value = memo.content || '';
+
+  document.getElementById('modal-memo-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('mmemo-id').value;
+    const data = {
+      title: document.getElementById('mmemo-title').value.trim(),
+      content: document.getElementById('mmemo-content').value,
+      is_private: document.getElementById('mmemo-private').checked ? 1 : 0
+    };
+
+    try {
+      if (id) {
+        data.id = Number(id);
+        await api.adminUpdateMemo(data);
+      } else {
+        await api.adminCreateMemo(data);
+      }
+      hideModal();
+      loadMemos();
+    } catch (err) {
+      alert('保存失败: ' + err.message);
+    }
+  });
 }
 
 init();

@@ -20,6 +20,7 @@
       <div class="header-actions">
         <div id="ip-badge" class="ip-badge-container"></div>
         <button class="theme-toggle" title="切换主题">🌙</button>
+        <button id="memo-toggle" class="btn btn-ghost btn-sm" title="查看备忘录">📝 备忘</button>
         <button id="edit-toggle" class="btn btn-ghost btn-sm">✏️ 编辑</button>
       </div>
     </div>
@@ -51,6 +52,23 @@
 
   <!-- IP Popup Panel -->
   <div id="ip-popup" class="ip-popup" style="display: none;"></div>
+
+  <!-- Memo Drawer -->
+  <div id="memo-drawer" class="memo-drawer">
+    <div class="memo-drawer-header">
+      <h3>📝 备忘录</h3>
+      <button id="memo-drawer-close" class="btn btn-ghost btn-sm" title="关闭">&times;</button>
+    </div>
+    <div class="memo-drawer-body">
+      <div id="memo-admin-actions" style="display: none; margin-bottom: 16px;">
+        <button id="memo-add-btn" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center;">+ 新建备忘</button>
+      </div>
+      <div id="memo-list" class="memo-list">
+        <div class="memo-empty">正在加载备忘录...</div>
+      </div>
+    </div>
+  </div>
+  <div id="drawer-overlay" class="drawer-overlay"></div>
 
   <!-- Modal -->
   <div id="modal-overlay" class="modal-overlay">
