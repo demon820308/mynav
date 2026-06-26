@@ -1023,6 +1023,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
 }
 
 .memo-card:hover {
@@ -1096,6 +1097,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   transition: all 0.3s ease;
+  padding-right: 24px;
 }
 
 .memo-card.expanded .memo-card-content {
@@ -1300,10 +1302,10 @@
   justify-content: center;
   border-radius: 4px;
   transition: all 0.15s;
-  position: absolute;
-  top: 8px;
-  right: 8px;
   opacity: 0;
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
 }
 
 .memo-card:hover .memo-drag-handle {
@@ -1318,10 +1320,6 @@
 
 .memo-drag-handle:active {
   cursor: grabbing;
-}
-
-.memo-card {
-  position: relative;
 }
 
 .memo-drag-ghost {

@@ -1086,7 +1086,6 @@ function renderMemos(memos) {
 
     return `
       <div class="memo-card fade-in" data-id="${memo.id}">
-        ${dragHandleHtml}
         <div class="memo-card-header">
           <div class="memo-card-title-container">
             <div class="memo-card-title">${titleHtml}</div>
@@ -1098,6 +1097,7 @@ function renderMemos(memos) {
           ${actionsHtml}
         </div>
         <div class="memo-card-content">${formattedContent}</div>
+        ${dragHandleHtml}
       </div>
     `;
   }).join('');
