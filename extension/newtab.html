@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新标签页 - 个人导航</title>
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+  <!-- Top Header Row -->
+  <header class="header">
+    <div class="header-left">
+      <div class="clock-section">
+        <span id="clock-time" class="clock-time">00:00</span>
+        <span id="clock-date" class="clock-date">加载中...</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="搜索导航..." autocomplete="off" autofocus>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div id="ip-badge" class="ip-badge-container"></div>
+      <button id="edit-toggle" class="btn btn-ghost btn-sm">✏️ 编辑</button>
+      <button id="settings-btn" class="btn btn-ghost btn-sm" title="设置">⚙️ 设置</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Links / Categories Content -->
+    <div id="content">
+      <div class="empty-state">加载中...</div>
+    </div>
+  </main>
+
+  <button id="back-to-top" class="back-to-top" title="返回顶部">↑</button>
+
+  <!-- IP Popup Panel -->
+  <div id="ip-popup" class="ip-popup" style="display: none;"></div>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div id="modal-panel" class="modal-panel">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="newtab.js"></script>
+</body>
+</html>

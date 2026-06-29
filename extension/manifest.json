@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "dEmOn Speed Dial",
+  "version": "1.0.0",
+  "description": "个人导航 - 快速拨号新标签页",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://nav.ipanic.bond/*"
+  ],
+  "icons": {
+    "128": "icon.png"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}

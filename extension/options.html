@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>设置 - dEmOn Speed Dial</title>
+  <link rel="stylesheet" href="newtab.css">
+  <style>
+    body {
+      background: radial-gradient(circle at center, #1e1b4b 0%, #0f0b29 100%);
+      padding: 40px 20px;
+    }
+    .options-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: var(--backdrop-blur);
+      -webkit-backdrop-filter: var(--backdrop-blur);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .options-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-ink);
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 12px;
+    }
+    .status-msg {
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .status-success {
+      color: #10b981;
+    }
+    .status-error {
+      color: var(--color-danger);
+    }
+  </style>
+</head>
+<body>
+  <!-- Base Config Card -->
+  <div class="options-card">
+    <div class="options-title">⚙️ 扩展设置</div>
+    
+    <div class="form-group">
+      <label class="form-label" for="api-base-input">后端 API 基准地址 (API Base URL)</label>
+      <input type="url" id="api-base-input" placeholder="https://nav.ipanic.bond" required autocomplete="off">
+      <div id="connection-status" class="status-msg"></div>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+      <button id="test-connection-btn" class="btn btn-ghost" style="flex: 1;">🔍 测试连接</button>
+      <button id="save-btn" class="btn btn-primary" style="flex: 1;">💾 保存设置</button>
+    </div>
+
+    <div style="border-top: 1px solid var(--color-border); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 14px; color: var(--color-muted);">管理员会话状态</span>
+        <button id="logout-btn" class="btn btn-danger btn-sm" style="display: none;">🔒 退出登录</button>
+        <span id="login-status-text" style="font-size: 13px; color: var(--color-muted);">未登录</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+        <span style="font-size: 14px; color: var(--color-muted);">重置所有本地数据</span>
+        <button id="reset-btn" class="btn btn-danger btn-sm">⚠️ 清除并重置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Config Card -->
+  <div class="options-card">
+    <div class="options-title">🔄 数据双向同步</div>
+    
+    <div class="form-group">
+      <label class="form-label" for="sync-password-input">管理员密码 (同步鉴权使用)</label>
+      <input type="password" id="sync-password-input" placeholder="输入管理密码" autocomplete="off">
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+      <button id="sync-pull-btn" class="btn btn-ghost" style="flex: 1;">☁️ 从云端拉取</button>
+      <button id="sync-push-btn" class="btn btn-primary" style="flex: 1;">📱 同步到云端</button>
+    </div>
+
+    <div id="sync-status" class="status-msg"></div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
