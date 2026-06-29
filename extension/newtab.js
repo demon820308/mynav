@@ -1146,11 +1146,11 @@ function loadLeaflet() {
     
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet/dist/leaflet.css';
+    link.href = 'leaflet.css';
     document.head.appendChild(link);
     
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet/dist/leaflet.js';
+    script.src = 'leaflet.js';
     script.onload = () => resolve();
     script.onerror = (err) => {
       leafletPromise = null;
