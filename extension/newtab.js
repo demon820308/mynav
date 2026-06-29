@@ -555,6 +555,8 @@ function initDragAndDrop() {
       if (e.button !== 0) return; // left click only
       if (e.target.closest('.link-fav') || e.target.closest('[data-action]')) return;
       
+      e.preventDefault(); // Prevent native image drag and text selection
+      
       const startX = e.clientX;
       const startY = e.clientY;
       let dragStarted = false;
@@ -589,6 +591,8 @@ function initDragAndDrop() {
   });
 }
 
+let rAF = null;
+
 function startDrag(e, card) {
   if (!card) return;
 
@@ -596,8 +600,17 @@ function startDrag(e, card) {
   const ghost = card.cloneNode(true);
   ghost.className = 'link-card drag-ghost';
   ghost.style.width = rect.width + 'px';
-  ghost.style.left  = (e.clientX - rect.width  / 2) + 'px';
-  ghost.style.top   = (e.clientY - rect.height / 2) + 'px';
+  ghost.style.height = rect.height + 'px';
+  ghost.style.left = '0px';
+  ghost.style.top = '0px';
+  
+  const gripX = e.clientX - rect.left;
+  const gripY = e.clientY - rect.top;
+  
+  const offsetX = e.clientX - gripX;
+  const offsetY = e.clientY - gripY;
+  ghost.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) scale(1.05)`;
+  
   document.body.appendChild(ghost);
 
   card.style.opacity = '0.3';
@@ -613,9 +626,17 @@ function startDrag(e, card) {
     }));
   }
 
-  dragState = { card, ghost, moved: false, swapTarget: null, siblingRects };
+  dragState = { 
+    card, 
+    ghost, 
+    moved: false, 
+    swapTarget: null, 
+    siblingRects,
+    gripX,
+    gripY
+  };
 
-  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mousemove', onDragMove, { passive: false });
   document.addEventListener('mouseup',   onDragEnd);
 }
 
@@ -624,28 +645,37 @@ function onDragMove(e) {
   e.preventDefault();
   dragState.moved = true;
 
-  const { ghost, siblingRects } = dragState;
-  ghost.style.left = (e.clientX - ghost.offsetWidth  / 2) + 'px';
-  ghost.style.top  = (e.clientY - ghost.offsetHeight / 2) + 'px';
+  if (rAF) cancelAnimationFrame(rAF);
 
-  let newTarget = null;
-  for (const item of siblingRects) {
-    const r = item.rect;
-    if (e.clientX >= r.left && e.clientX <= r.right &&
-        e.clientY >= r.top  && e.clientY <= r.bottom) {
-      newTarget = item.element;
-      break;
+  rAF = requestAnimationFrame(() => {
+    if (!dragState) return;
+    
+    const { ghost, siblingRects, gripX, gripY } = dragState;
+    const offsetX = e.clientX - gripX;
+    const offsetY = e.clientY - gripY;
+    
+    ghost.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) scale(1.05)`;
+
+    let newTarget = null;
+    for (const item of siblingRects) {
+      const r = item.rect;
+      if (e.clientX >= r.left && e.clientX <= r.right &&
+          e.clientY >= r.top  && e.clientY <= r.bottom) {
+        newTarget = item.element;
+        break;
+      }
     }
-  }
 
-  if (dragState.swapTarget !== newTarget) {
-    if (dragState.swapTarget) dragState.swapTarget.classList.remove('drop-target');
-    if (newTarget)            newTarget.classList.add('drop-target');
-    dragState.swapTarget = newTarget;
-  }
+    if (dragState.swapTarget !== newTarget) {
+      if (dragState.swapTarget) dragState.swapTarget.classList.remove('drop-target');
+      if (newTarget)            newTarget.classList.add('drop-target');
+      dragState.swapTarget = newTarget;
+    }
+  });
 }
 
 async function onDragEnd() {
+  if (rAF) cancelAnimationFrame(rAF);
   if (!dragState) return;
 
   const { card, ghost, swapTarget } = dragState;
