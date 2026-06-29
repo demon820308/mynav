@@ -136,11 +136,16 @@ function initEditMode() {
 // ── Modal UI ──
 function initModal() {
   const overlay = document.getElementById('modal-overlay');
+  const closeBtn = document.getElementById('modal-close-btn');
   if (!overlay) return;
 
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) hideModal();
   });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', hideModal);
+  }
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hideModal();
@@ -715,12 +720,270 @@ function initSettingsBtn() {
   if (!settingsBtn) return;
 
   settingsBtn.addEventListener('click', () => {
-    if (chrome.runtime.openOptionsPage) {
-      chrome.runtime.openOptionsPage();
-    } else {
-      window.open(chrome.runtime.getURL('options.html'));
+    showSettingsModal();
+  });
+}
+
+async function showSettingsModal() {
+  const apiBase = await api.getBase();
+  const token = await getStorage('admin_token', null);
+  const localCats = await getStorage('local_categories', []);
+  const localLnks = await getStorage('local_links', []);
+
+  const loginStatusText = token ? '<span style="color:#10b981;">已登录为管理员</span>' : '<span style="color:var(--color-muted);">未登录</span>';
+  const logoutBtnHtml = token ? '<button id="mset-logout-btn" class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:11px;">🔒 退出登录</button>' : '';
+
+  showModal('⚙️ 扩展设置与同步', `
+    <div style="display:flex;flex-direction:column;gap:16px;max-height:70vh;overflow-y:auto;text-align:left;padding-right:6px;">
+      <!-- Base Config -->
+      <div style="display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--color-border);padding-bottom:14px;">
+        <div class="form-group">
+          <label class="form-label">后端 API 基准地址 (API Base URL)</label>
+          <input type="url" id="mset-api-base" value="${escapeHtml(apiBase)}" placeholder="https://nav.ipanic.bond" required autocomplete="off">
+          <div id="mset-conn-status" class="status-msg"></div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button id="mset-test-btn" class="btn btn-ghost btn-sm" style="flex: 1;">🔍 测试连接</button>
+          <button id="mset-save-btn" class="btn btn-primary btn-sm" style="flex: 1;">💾 保存设置</button>
+        </div>
+      </div>
+
+      <!-- Sync Config -->
+      <div style="display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--color-border);padding-bottom:14px;">
+        <h4 style="font-size:14px;color:var(--color-ink);font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:2px;">🔄 数据双向同步</h4>
+        <div class="form-group">
+          <label class="form-label">管理员密码 (同步鉴权使用)</label>
+          <input type="password" id="mset-password" placeholder="输入管理密码" autocomplete="off">
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button id="mset-pull-btn" class="btn btn-ghost btn-sm" style="flex: 1;">☁️ 从云端拉取</button>
+          <button id="mset-push-btn" class="btn btn-primary btn-sm" style="flex: 1;">📱 同步到云端</button>
+        </div>
+        <div id="mset-sync-status" class="status-msg"></div>
+      </div>
+
+      <!-- Actions & Reset -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; color: var(--color-muted);">管理员状态</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${loginStatusText}
+            ${logoutBtnHtml}
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; color: var(--color-muted);">本地数据量</span>
+          <span style="font-size: 13px; color: var(--color-ink); font-weight:500;">${localCats.length} 分类 / ${localLnks.length} 链接</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <span style="font-size: 13px; color: var(--color-muted);">重置本地数据</span>
+          <button id="mset-reset-btn" class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:11px;">⚠️ 清除并重置</button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  const msetApiBase = document.getElementById('mset-api-base');
+  const msetConnStatus = document.getElementById('mset-conn-status');
+  const msetTestBtn = document.getElementById('mset-test-btn');
+  const msetSaveBtn = document.getElementById('mset-save-btn');
+
+  const msetPassword = document.getElementById('mset-password');
+  const msetPullBtn = document.getElementById('mset-pull-btn');
+  const msetPushBtn = document.getElementById('mset-push-btn');
+  const msetSyncStatus = document.getElementById('mset-sync-status');
+
+  const msetLogoutBtn = document.getElementById('mset-logout-btn');
+  const msetResetBtn = document.getElementById('mset-reset-btn');
+
+  async function getModalAuthToken() {
+    const pw = msetPassword.value.trim();
+    const apiBase = msetApiBase.value.trim().replace(/\/$/, '');
+    if (pw) {
+      try {
+        const res = await fetch(`${apiBase}/api/admin/auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        if (!res.ok) throw new Error('密码错误或身份认证失败。');
+        const { token } = await res.json();
+        await setStorage('admin_token', token);
+        msetPassword.value = '';
+        return token;
+      } catch (err) {
+        throw new Error(err.message);
+      }
+    }
+    const saved = await getStorage('admin_token', null);
+    if (!saved) throw new Error('请输入管理员密码。');
+    return saved;
+  }
+
+  msetTestBtn.addEventListener('click', async () => {
+    const rawUrl = msetApiBase.value.trim();
+    if (!rawUrl) {
+      showStatus(msetConnStatus, '请输入基准地址', false);
+      return;
+    }
+    const cleanUrl = rawUrl.replace(/\/$/, '');
+    showStatus(msetConnStatus, '正在测试连接...', null);
+    msetTestBtn.disabled = true;
+    try {
+      const res = await fetch(`${cleanUrl}/api/categories`);
+      if (res.ok) {
+        showStatus(msetConnStatus, '连接成功！后端响应正常。', true);
+      } else {
+        showStatus(msetConnStatus, `连接失败 (HTTP ${res.status}): ${res.statusText}`, false);
+      }
+    } catch (err) {
+      showStatus(msetConnStatus, `连接失败: ${err.message}`, false);
+    } finally {
+      msetTestBtn.disabled = false;
     }
   });
+
+  msetSaveBtn.addEventListener('click', async () => {
+    const rawUrl = msetApiBase.value.trim();
+    if (!rawUrl) {
+      showStatus(msetConnStatus, '请输入基准地址', false);
+      return;
+    }
+    const cleanUrl = rawUrl.replace(/\/$/, '');
+    await setStorage('api_base', cleanUrl);
+    showStatus(msetConnStatus, '设置已保存！', true);
+    setTimeout(() => { msetConnStatus.textContent = ''; }, 3000);
+  });
+
+  if (msetLogoutBtn) {
+    msetLogoutBtn.addEventListener('click', async () => {
+      if (confirm('确定退出管理员登录状态吗？')) {
+        await removeStorage('admin_token');
+        hideModal();
+        showSettingsModal();
+      }
+    });
+  }
+
+  msetResetBtn.addEventListener('click', async () => {
+    if (confirm('警告：此操作将清除所有本地设置、分类、链接及收藏数据！确定继续吗？')) {
+      await removeStorage('admin_token');
+      await removeStorage('local_categories');
+      await removeStorage('local_links');
+      await removeStorage('favorites');
+      await setStorage('api_base', 'https://nav.ipanic.bond');
+      hideModal();
+      await loadData();
+      showSettingsModal();
+    }
+  });
+
+  msetPullBtn.addEventListener('click', async () => {
+    const apiBase = msetApiBase.value.trim().replace(/\/$/, '');
+    showStatus(msetSyncStatus, '正在从云端拉取数据...', null);
+    msetPullBtn.disabled = true;
+    try {
+      const token = await getModalAuthToken();
+      const catRes = await fetch(`${apiBase}/api/categories`);
+      if (!catRes.ok) throw new Error('拉取分类失败');
+      const categories = await catRes.json();
+
+      const linkRes = await fetch(`${apiBase}/api/links`);
+      if (!linkRes.ok) throw new Error('拉取链接失败');
+      const links = await linkRes.json();
+
+      const slugMap = {};
+      categories.forEach(c => { slugMap[c.id] = c.slug; });
+      const mappedLinks = links.map(l => ({ ...l, category_slug: slugMap[l.category_id] || '' }));
+
+      await setStorage('local_categories', categories);
+      await setStorage('local_links', mappedLinks);
+      showStatus(msetSyncStatus, `拉取成功！已同步 ${categories.length} 个分类，${mappedLinks.length} 个链接。`, true);
+      
+      await loadData();
+      setTimeout(() => {
+        hideModal();
+        showSettingsModal();
+      }, 1000);
+    } catch (err) {
+      showStatus(msetSyncStatus, '拉取失败: ' + err.message, false);
+    } finally {
+      msetPullBtn.disabled = false;
+    }
+  });
+
+  msetPushBtn.addEventListener('click', async () => {
+    const apiBase = msetApiBase.value.trim().replace(/\/$/, '');
+    const localCategories = await getStorage('local_categories', null);
+    const localLinks = await getStorage('local_links', null);
+
+    if (!localCategories || !localLinks || localCategories.length === 0) {
+      showStatus(msetSyncStatus, '推送失败: 本地暂无数据。', false);
+      return;
+    }
+
+    if (!confirm(`警告：此操作将使用本地数据（共 ${localCategories.length} 个分类，${localLinks.length} 个链接）完全覆盖云端数据库，确定继续吗？`)) {
+      return;
+    }
+
+    showStatus(msetSyncStatus, '正在同步到云端...', null);
+    msetPushBtn.disabled = true;
+
+    try {
+      const token = await getModalAuthToken();
+      const syncRes = await fetch(`${apiBase}/api/admin/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ categories: localCategories, links: localLinks })
+      });
+
+      if (!syncRes.ok) {
+        const errJson = await syncRes.json().catch(() => ({ error: syncRes.statusText }));
+        throw new Error(errJson.error || '推送失败');
+      }
+
+      showStatus(msetSyncStatus, '同步成功！正在重新载入获取服务器分配的 ID...', null);
+
+      const catRes = await fetch(`${apiBase}/api/categories`);
+      const linksRes = await fetch(`${apiBase}/api/links`);
+      if (catRes.ok && linksRes.ok) {
+        const categories = await catRes.json();
+        const links = await linksRes.json();
+        const slugMap = {};
+        categories.forEach(c => { slugMap[c.id] = c.slug; });
+        const mappedLinks = links.map(l => ({ ...l, category_slug: slugMap[l.category_id] || '' }));
+        await setStorage('local_categories', categories);
+        await setStorage('local_links', mappedLinks);
+      }
+
+      showStatus(msetSyncStatus, '全部同步并刷新完成！本地和云端已 100% 同步。', true);
+      await loadData();
+      setTimeout(() => {
+        hideModal();
+        showSettingsModal();
+      }, 1000);
+    } catch (err) {
+      showStatus(msetSyncStatus, '同步失败: ' + err.message, false);
+    } finally {
+      msetPushBtn.disabled = false;
+    }
+  });
+
+  function showStatus(element, msg, success) {
+    if (!element) return;
+    element.textContent = msg;
+    element.className = 'status-msg';
+    if (success === true) {
+      element.classList.add('status-success');
+    } else if (success === false) {
+      element.classList.add('status-error');
+    } else {
+      element.style.color = 'var(--color-muted)';
+    }
+  }
 }
 
 // ── IP Purity Detection ──
