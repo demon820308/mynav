@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "个人导航 - 快速拨号新标签页",
   "permissions": [
-    "storage"
+    "storage",
+    "favicon"
   ],
   "host_permissions": [
     "https://nav.ipanic.bond/*"

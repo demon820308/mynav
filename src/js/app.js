@@ -138,8 +138,19 @@ function renderCategories(categories, links) {
 
 function renderLinkCard(link) {
   const fav = isFavorite(link.id);
-  const faviconHtml = link.favicon_url
-    ? `<img class="link-favicon" src="${escapeHtml(link.favicon_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+  
+  let faviconUrl = link.favicon_url;
+  if (!faviconUrl && link.url) {
+    try {
+      const domain = new URL(link.url).hostname;
+      faviconUrl = `https://www.faviconextractor.com/favicon/${domain}?larger=true`;
+    } catch (e) {
+      faviconUrl = '';
+    }
+  }
+
+  const faviconHtml = faviconUrl
+    ? `<img class="link-favicon" src="${escapeHtml(faviconUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
     : '';
   // Single char, but still escape in case title starts with '<'
   const fallbackLetter = escapeHtml(link.title.charAt(0).toUpperCase());
@@ -148,7 +159,7 @@ function renderLinkCard(link) {
          data-link-id="${link.id}" data-category-id="${link.category_id}">
       ${editMode ? '<div class="drag-handle" title="按住拖拽排序">⋮⋮</div>' : ''}
       ${faviconHtml}
-      <div class="link-favicon-fallback" ${link.favicon_url ? 'style="display:none"' : ''}>${fallbackLetter}</div>
+      <div class="link-favicon-fallback" ${faviconUrl ? 'style="display:none"' : ''}>${fallbackLetter}</div>
       <div class="link-info">
         <div class="link-title">${escapeHtml(link.title)}</div>
         <div class="link-desc">${escapeHtml(link.description || '')}</div>

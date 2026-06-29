@@ -109,9 +109,18 @@ function renderTable(links, cats) {
     html += `<h3 style="margin: 20px 0 12px; font-size: 15px; color: var(--color-muted);">${escapeHtml(catName)}</h3>`;
     html += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
     for (const link of catLinks) {
+      let faviconUrl = link.favicon_url;
+      if (!faviconUrl && link.url) {
+        try {
+          const domain = new URL(link.url).hostname;
+          faviconUrl = `https://www.faviconextractor.com/favicon/${domain}?larger=true`;
+        } catch (e) {
+          faviconUrl = '';
+        }
+      }
       html += `
         <div class="link-card" style="cursor: default;">
-          <img class="link-favicon" src="${escapeHtml(link.favicon_url)}" alt="" onerror="this.style.display='none'">
+          <img class="link-favicon" src="${escapeHtml(faviconUrl)}" alt="" onerror="this.style.display='none'">
           <div class="link-info">
             <div class="link-title">${escapeHtml(link.title)}</div>
             <div class="link-desc">${escapeHtml(link.url)}</div>

@@ -355,15 +355,30 @@ function renderCategories(categories, links, favorites) {
 function renderLinkCard(link, favorites) {
   const fav = favorites.includes(link.id);
   const fallbackLetter = escapeHtml(link.title.charAt(0).toUpperCase());
-  const faviconHtml = link.favicon_url
-    ? `<img class="link-favicon" src="${escapeHtml(link.favicon_url)}" alt="">`
+  
+  let faviconUrl = link.favicon_url;
+  if (!faviconUrl && link.url) {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        faviconUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(link.url)}&size=64`;
+      } else {
+        const domain = new URL(link.url).hostname;
+        faviconUrl = `https://www.faviconextractor.com/favicon/${domain}?larger=true`;
+      }
+    } catch (e) {
+      faviconUrl = '';
+    }
+  }
+
+  const faviconHtml = faviconUrl
+    ? `<img class="link-favicon" src="${escapeHtml(faviconUrl)}" alt="">`
     : '';
 
   return `
     <div class="link-card ${editMode ? 'link-card-editable' : ''}"
          data-link-id="${link.id}" data-category-id="${link.category_id}">
       ${faviconHtml}
-      <div class="link-favicon-fallback" style="${link.favicon_url ? 'display:none;' : ''}">${fallbackLetter}</div>
+      <div class="link-favicon-fallback" style="${faviconUrl ? 'display:none;' : ''}">${fallbackLetter}</div>
       <div class="link-info">
         <div class="link-title">${escapeHtml(link.title)}</div>
         <div class="link-desc">${escapeHtml(link.description || '')}</div>
