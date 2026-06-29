@@ -111,26 +111,12 @@ async function updateSearchPlaceholder() {
     bilibili: '哔哩哔哩'
   };
   const name = engineNames[engine] || '百度';
-  input.placeholder = `使用 ${name} 搜索，或本地过滤...`;
+  input.placeholder = `使用 ${name} 搜索...`;
 }
 
 function initSearch() {
   const input = document.getElementById('search-input');
   if (!input) return;
-
-  input.addEventListener('input', async () => {
-    const q = input.value.trim().toLowerCase();
-    const favorites = await loadFavorites();
-    if (!q) {
-      renderCategories(allCategories, allLinks, favorites);
-      return;
-    }
-    const filtered = allLinks.filter(l =>
-      l.title.toLowerCase().includes(q) ||
-      (l.description && l.description.toLowerCase().includes(q))
-    );
-    renderCategories(allCategories, filtered, favorites);
-  });
 
   input.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
