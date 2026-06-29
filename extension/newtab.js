@@ -274,11 +274,7 @@ async function loadData() {
         </div>
       `;
       document.getElementById('guide-settings-btn')?.addEventListener('click', () => {
-        if (chrome.runtime.openOptionsPage) {
-          chrome.runtime.openOptionsPage();
-        } else {
-          window.open(chrome.runtime.getURL('options.html'));
-        }
+        showSettingsModal();
       });
       return;
     }
