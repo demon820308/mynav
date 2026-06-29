@@ -90,6 +90,30 @@ function initClock() {
 }
 
 // ── Search ──
+async function updateSearchPlaceholder() {
+  const input = document.getElementById('search-input');
+  if (!input) return;
+  const engine = await getStorage('search_engine', 'baidu');
+  const engineNames = {
+    baidu: '百度',
+    google: 'Google',
+    bing: '必应',
+    yahoo: 'Yahoo',
+    'ask.com': 'Ask.com',
+    aol: 'AOL',
+    duckduckgo: 'DuckDuckGo',
+    ecosia: 'Ecosia',
+    yandex: 'Yandex',
+    sogou: '搜狗',
+    so360: '360搜索',
+    github: 'GitHub',
+    stackoverflow: 'Stack Overflow',
+    bilibili: '哔哩哔哩'
+  };
+  const name = engineNames[engine] || '百度';
+  input.placeholder = `使用 ${name} 搜索，或本地过滤...`;
+}
+
 function initSearch() {
   const input = document.getElementById('search-input');
   if (!input) return;
@@ -106,6 +130,62 @@ function initSearch() {
       (l.description && l.description.toLowerCase().includes(q))
     );
     renderCategories(allCategories, filtered, favorites);
+  });
+
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      const q = input.value.trim();
+      if (!q) return;
+
+      const engine = await getStorage('search_engine', 'baidu');
+      let searchUrl = '';
+      switch (engine) {
+        case 'google':
+          searchUrl = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+          break;
+        case 'bing':
+          searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(q)}`;
+          break;
+        case 'yahoo':
+          searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(q)}`;
+          break;
+        case 'ask.com':
+          searchUrl = `https://www.ask.com/web?q=${encodeURIComponent(q)}`;
+          break;
+        case 'aol':
+          searchUrl = `https://search.aol.com/aol/search?q=${encodeURIComponent(q)}`;
+          break;
+        case 'duckduckgo':
+          searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(q)}`;
+          break;
+        case 'ecosia':
+          searchUrl = `https://www.ecosia.org/search?q=${encodeURIComponent(q)}`;
+          break;
+        case 'yandex':
+          searchUrl = `https://yandex.com/search/?text=${encodeURIComponent(q)}`;
+          break;
+        case 'sogou':
+          searchUrl = `https://www.sogou.com/web?query=${encodeURIComponent(q)}`;
+          break;
+        case 'so360':
+          searchUrl = `https://www.so.com/s?q=${encodeURIComponent(q)}`;
+          break;
+        case 'github':
+          searchUrl = `https://github.com/search?q=${encodeURIComponent(q)}`;
+          break;
+        case 'stackoverflow':
+          searchUrl = `https://stackoverflow.com/search?q=${encodeURIComponent(q)}`;
+          break;
+        case 'bilibili':
+          searchUrl = `https://search.bilibili.com/all?keyword=${encodeURIComponent(q)}`;
+          break;
+        case 'baidu':
+        default:
+          searchUrl = `https://www.baidu.com/s?wd=${encodeURIComponent(q)}`;
+          break;
+      }
+      window.open(searchUrl, '_blank');
+    }
   });
 }
 
@@ -778,6 +858,36 @@ async function showSettingsModal() {
         </div>
       </div>
 
+      <!-- Search Engine Config -->
+      <div style="display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--color-border);padding-bottom:14px;">
+        <h4 style="font-size:14px;color:var(--color-ink);font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:2px;">🔍 默认网页搜索</h4>
+        <div class="form-group">
+          <label class="form-label">选择搜索引擎（输入内容后回车直接搜索）</label>
+          <select id="mset-search-engine" style="width:100%;padding:6px;border-radius:var(--radius-sm);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-ink);font-size:13px;outline:none;">
+            <optgroup label="通用搜索">
+              <option value="baidu">百度 (Baidu)</option>
+              <option value="google">Google (谷歌)</option>
+              <option value="bing">必应 (Bing)</option>
+              <option value="yahoo">Yahoo (雅虎)</option>
+              <option value="ask.com">Ask.com (问答)</option>
+              <option value="aol">AOL (美国在线)</option>
+              <option value="duckduckgo">DuckDuckGo (隐私)</option>
+              <option value="ecosia">Ecosia (植树环保)</option>
+              <option value="yandex">Yandex (俄罗斯)</option>
+              <option value="sogou">搜狗 (Sogou)</option>
+              <option value="so360">360 搜索</option>
+            </optgroup>
+            <optgroup label="开发技术">
+              <option value="github">GitHub</option>
+              <option value="stackoverflow">Stack Overflow</option>
+            </optgroup>
+            <optgroup label="社区媒体">
+              <option value="bilibili">哔哩哔哩 (Bilibili)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
       <!-- Sync Config -->
       <div style="display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--color-border);padding-bottom:14px;">
         <h4 style="font-size:14px;color:var(--color-ink);font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:2px;">🔄 数据双向同步</h4>
@@ -818,6 +928,7 @@ async function showSettingsModal() {
   const msetTestBtn = document.getElementById('mset-test-btn');
   const msetSaveBtn = document.getElementById('mset-save-btn');
 
+  const msetSearchEngine = document.getElementById('mset-search-engine');
   const msetPassword = document.getElementById('mset-password');
   const msetPullBtn = document.getElementById('mset-pull-btn');
   const msetPushBtn = document.getElementById('mset-push-btn');
@@ -825,6 +936,15 @@ async function showSettingsModal() {
 
   const msetLogoutBtn = document.getElementById('mset-logout-btn');
   const msetResetBtn = document.getElementById('mset-reset-btn');
+
+  if (msetSearchEngine) {
+    const savedEngine = await getStorage('search_engine', 'baidu');
+    msetSearchEngine.value = savedEngine;
+    msetSearchEngine.addEventListener('change', async () => {
+      await setStorage('search_engine', msetSearchEngine.value);
+      await updateSearchPlaceholder();
+    });
+  }
 
   async function getModalAuthToken() {
     const pw = msetPassword.value.trim();
@@ -1339,6 +1459,7 @@ async function init() {
   initClock();
   initBackToTop();
   initSearch();
+  await updateSearchPlaceholder();
   initEditMode();
   initModal();
   initSettingsBtn();
