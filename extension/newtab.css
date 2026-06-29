@@ -497,6 +497,18 @@ input, select, textarea {
   transition: all var(--transition);
 }
 
+select option, select optgroup {
+  background-color: #1e1b4b;
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: light) {
+  select option, select optgroup {
+    background-color: #ffffff;
+    color: #111827;
+  }
+}
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary);
