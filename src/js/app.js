@@ -136,29 +136,36 @@ function renderCategories(categories, links) {
   bindEvents();
 }
 
-function renderLinkCard(link) {
-  const fav = isFavorite(link.id);
+function renderLinkCard(link, favorites = []) {
+  const isFav = Array.isArray(favorites)
+    ? favorites.includes(link.id)
+    : (typeof isFavorite === 'function' && isFavorite(link.id));
+
+  const fallbackLetter = escapeHtml(link.title.charAt(0).toUpperCase());
   
   let faviconUrl = link.favicon_url;
   if (!faviconUrl && link.url) {
     try {
-      const domain = new URL(link.url).hostname;
-      faviconUrl = `https://www.faviconextractor.com/favicon/${domain}?larger=true`;
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        faviconUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(link.url)}&size=64`;
+      } else {
+        const domain = new URL(link.url).hostname;
+        faviconUrl = `https://www.faviconextractor.com/favicon/${domain}?larger=true`;
+      }
     } catch (e) {
       faviconUrl = '';
     }
   }
 
   const faviconHtml = faviconUrl
-    ? `<img class="link-favicon" src="${escapeHtml(faviconUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    ? `<img class="link-favicon" src="${escapeHtml(faviconUrl)}" alt="">`
     : '';
-  // Single char, but still escape in case title starts with '<'
-  const fallbackLetter = escapeHtml(link.title.charAt(0).toUpperCase());
+
   return `
     <div class="link-card ${editMode ? 'link-card-editable' : ''}"
          data-link-id="${link.id}" data-category-id="${link.category_id}">
       ${faviconHtml}
-      <div class="link-favicon-fallback" ${faviconUrl ? 'style="display:none"' : ''}>${fallbackLetter}</div>
+      <div class="link-favicon-fallback" style="${faviconUrl ? 'display:none;' : ''}">${fallbackLetter}</div>
       <div class="link-info">
         <div class="link-title">${escapeHtml(link.title)}</div>
         <div class="link-desc">${escapeHtml(link.description || '')}</div>
@@ -168,7 +175,7 @@ function renderLinkCard(link) {
           <button class="btn btn-danger btn-sm" data-action="delete-link" data-id="${link.id}" data-title="${escapeHtml(link.title)}" title="删除">🗑️</button>
         </div>
       ` : `
-        <button class="link-fav ${fav ? 'active' : ''}" data-id="${link.id}" title="收藏">${fav ? '★' : '☆'}</button>
+        <button class="link-fav ${isFav ? 'active' : ''}" data-id="${link.id}" title="收藏">${isFav ? '★' : '☆'}</button>
       `}
     </div>
   `;
@@ -177,6 +184,17 @@ function renderLinkCard(link) {
 // ── Events ──
 
 function bindEvents() {
+  // Favicon error handling (CSP safe)
+  document.querySelectorAll('img.link-favicon').forEach(img => {
+    img.addEventListener('error', () => {
+      img.style.display = 'none';
+      const fallback = img.nextElementSibling;
+      if (fallback && fallback.classList.contains('link-favicon-fallback')) {
+        fallback.style.display = 'flex';
+      }
+    });
+  });
+
   // Favorites
   document.querySelectorAll('.link-fav').forEach(btn => {
     btn.addEventListener('click', (e) => {
