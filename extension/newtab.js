@@ -837,7 +837,10 @@ async function onDragEnd() {
     // 7. Cleanup ghost and restore card visibility after landing animation
     setTimeout(async () => {
       ghost.remove();
+      card.style.transition = 'none';
       card.style.opacity = '';
+      card.offsetHeight; // force reflow
+      card.style.transition = '';
       await saveOrder(grid);
     }, 300);
 
@@ -849,7 +852,10 @@ async function onDragEnd() {
     
     setTimeout(() => {
       ghost.remove();
+      card.style.transition = 'none';
       card.style.opacity = '';
+      card.offsetHeight; // force reflow
+      card.style.transition = '';
     }, 300);
   }
 
