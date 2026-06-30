@@ -128,6 +128,8 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  backdrop-filter: var(--backdrop-blur, none);
+  -webkit-backdrop-filter: var(--backdrop-blur, none);
   transition: all var(--transition);
   cursor: pointer;
   text-decoration: none;

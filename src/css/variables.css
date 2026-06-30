@@ -48,3 +48,80 @@
   --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
 }
+
+/* Custom Background Styles (All are dark/glass themes with custom gradients/colors) */
+
+[data-bg-style="glass-dark"] {
+  --color-bg: radial-gradient(circle at center, #1e1b4b 0%, #0f0b29 100%);
+  --color-bg-soft: rgba(255, 255, 255, 0.03);
+  --color-surface: rgba(255, 255, 255, 0.06);
+  --color-text: #f3f4f6;
+  --color-ink: #ffffff;
+  --color-muted: #9ca3af;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.25);
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-danger-hover: #fca5a5;
+  --backdrop-blur: blur(16px);
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-bg-style="aurora"] {
+  --color-bg: linear-gradient(135deg, #0b132b 0%, #1c2541 40%, #3a506b 100%);
+  --color-bg-soft: rgba(255, 255, 255, 0.03);
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-text: #e2e8f0;
+  --color-ink: #f8fafc;
+  --color-muted: #94a3b8;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.2);
+  --color-primary: #38bdf8;
+  --color-primary-hover: #0ea5e9;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-danger-hover: #fca5a5;
+  --backdrop-blur: blur(16px);
+}
+
+[data-bg-style="sunset"] {
+  --color-bg: linear-gradient(135deg, #1e1b4b 0%, #701a75 50%, #311042 100%);
+  --color-bg-soft: rgba(255, 255, 255, 0.03);
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-text: #f3f4f6;
+  --color-ink: #ffffff;
+  --color-muted: #c084fc;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.2);
+  --color-primary: #e879f9;
+  --color-primary-hover: #d946ef;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-danger-hover: #fca5a5;
+  --backdrop-blur: blur(16px);
+}
+
+[data-bg-style="obsidian"] {
+  --color-bg: #09090b;
+  --color-bg-soft: #18181b;
+  --color-surface: #18181b;
+  --color-text: #e4e4e7;
+  --color-ink: #fafafa;
+  --color-muted: #71717a;
+  --color-border: #27272a;
+  --color-primary: #3f3f46;
+  --color-primary-hover: #52525b;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-danger-hover: #fca5a5;
+}
+
