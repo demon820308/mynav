@@ -157,7 +157,6 @@ function renderLinkCard(link) {
   return `
     <div class="link-card ${editMode ? 'link-card-editable' : ''}"
          data-link-id="${link.id}" data-category-id="${link.category_id}">
-      ${editMode ? '<div class="drag-handle" title="按住拖拽排序">⋮⋮</div>' : ''}
       ${faviconHtml}
       <div class="link-favicon-fallback" ${faviconUrl ? 'style="display:none"' : ''}>${fallbackLetter}</div>
       <div class="link-info">
@@ -191,24 +190,15 @@ function bindEvents() {
     });
   });
 
-  // Non-edit mode: click card to open
-  if (!editMode) {
-    document.querySelectorAll('.link-card[data-link-id]').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.link-fav')) return;
-        const link = allLinks.find(l => l.id === Number(card.dataset.linkId));
-        if (link) window.open(link.url, '_blank');
-      });
-    });
-  }
-
   // Edit mode actions
   if (editMode) {
     document.querySelectorAll('[data-action]').forEach(el => {
       el.addEventListener('click', handleAction);
     });
-    initDragAndDrop();
   }
+
+  // Always enable drag and drop
+  initDragAndDrop();
 }
 
 function handleAction(e) {
@@ -248,24 +238,55 @@ function handleAction(e) {
 // The hovered card is highlighted so the user always knows what will swap.
 
 function initDragAndDrop() {
-  document.querySelectorAll('.drag-handle').forEach(handle => {
-    handle.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      startDrag(e, handle);
+  document.querySelectorAll('.link-card[data-link-id]').forEach(card => {
+    card.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // left click only
+      if (e.target.closest('.link-fav') || e.target.closest('[data-action]')) return;
+      
+      e.preventDefault(); // Prevent native image drag and text selection
+      
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let dragStarted = false;
+      
+      function onMouseMove(moveEvent) {
+        if (!dragStarted) {
+          const dist = Math.sqrt(Math.pow(moveEvent.clientX - startX, 2) + Math.pow(moveEvent.clientY - startY, 2));
+          if (dist > 5) {
+            dragStarted = true;
+            startDrag(moveEvent, card);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup',   onMouseUp);
+          }
+        }
+      }
+      
+      function onMouseUp(upEvent) {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        if (!dragStarted && !editMode) {
+          const link = allLinks.find(l => l.id === Number(card.dataset.linkId));
+          if (link) {
+            window.open(link.url, '_blank');
+          }
+        }
+      }
+      
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     });
   });
 }
 
-function startDrag(e, handle) {
-  const card = handle.closest('.link-card[data-link-id]');
+function startDrag(e, card) {
   if (!card) return;
 
   const rect = card.getBoundingClientRect();
   const ghost = card.cloneNode(true);
   ghost.className = 'link-card drag-ghost';
   ghost.style.width = rect.width + 'px';
-  ghost.style.left  = (e.clientX - rect.width  / 2) + 'px';
-  ghost.style.top   = (e.clientY - rect.height / 2) + 'px';
+  ghost.style.left = (e.clientX - rect.width / 2) + 'px';
+  ghost.style.top  = (e.clientY - rect.height / 2) + 'px';
   document.body.appendChild(ghost);
 
   card.style.opacity = '0.3';

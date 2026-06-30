@@ -452,30 +452,6 @@
   box-shadow: var(--shadow-md);
 }
 
-.drag-handle {
-  cursor: grab;
-  color: var(--color-muted);
-  font-size: 20px;
-  padding: 6px 4px;
-  user-select: none;
-  flex-shrink: 0;
-  line-height: 1;
-  touch-action: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.15s;
-}
-
-.drag-handle:hover {
-  color: var(--color-primary);
-  background: var(--color-bg-soft);
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
 
 .card-edit-actions {
   display: flex;
