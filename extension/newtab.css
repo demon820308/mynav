@@ -27,6 +27,7 @@
 
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --backdrop-blur: blur(16px);
+  --color-header-bg: rgba(15, 11, 41, 0.45);
 }
 
 /* Light theme options (optional toggle or auto) */
@@ -78,11 +79,12 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(15, 11, 41, 0.45);
+  background: var(--color-header-bg);
   backdrop-filter: var(--backdrop-blur);
   -webkit-backdrop-filter: var(--backdrop-blur);
   border-bottom: 1px solid var(--color-border);
   box-sizing: border-box;
+  transition: background var(--transition), border-color var(--transition);
 }
 
 .header-left {
@@ -971,6 +973,7 @@ input:focus, select:focus, textarea:focus {
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
   --backdrop-blur: none;
+  --color-header-bg: rgba(251, 246, 238, 0.85);
 }
 
 [data-theme="dark"] {
@@ -990,6 +993,7 @@ input:focus, select:focus, textarea:focus {
   --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
   --backdrop-blur: none;
+  --color-header-bg: rgba(15, 23, 42, 0.85);
 }
 
 [data-bg-style="glass-dark"] {
@@ -1004,6 +1008,7 @@ input:focus, select:focus, textarea:focus {
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
   --backdrop-blur: blur(16px);
+  --color-header-bg: rgba(15, 11, 41, 0.45);
 }
 
 [data-bg-style="aurora"] {
@@ -1018,6 +1023,7 @@ input:focus, select:focus, textarea:focus {
   --color-primary: #38bdf8;
   --color-primary-hover: #0ea5e9;
   --backdrop-blur: blur(16px);
+  --color-header-bg: rgba(11, 19, 43, 0.5);
 }
 
 [data-bg-style="sunset"] {
@@ -1032,6 +1038,7 @@ input:focus, select:focus, textarea:focus {
   --color-primary: #e879f9;
   --color-primary-hover: #d946ef;
   --backdrop-blur: blur(16px);
+  --color-header-bg: rgba(30, 27, 75, 0.5);
 }
 
 [data-bg-style="obsidian"] {
@@ -1046,5 +1053,6 @@ input:focus, select:focus, textarea:focus {
   --color-primary: #3f3f46;
   --color-primary-hover: #52525b;
   --backdrop-blur: none;
+  --color-header-bg: rgba(9, 9, 11, 0.85);
 }
 

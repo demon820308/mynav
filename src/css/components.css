@@ -5,7 +5,9 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background var(--transition), border-color var(--transition);
+  backdrop-filter: var(--backdrop-blur, none);
+  -webkit-backdrop-filter: var(--backdrop-blur, none);
+  transition: all var(--transition);
 }
 
 .header-inner {
