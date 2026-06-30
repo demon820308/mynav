@@ -399,11 +399,9 @@ body {
   z-index: 9999;
   pointer-events: none;
   opacity: 0.8;
-  transform: scale(1.05);
   box-shadow: var(--shadow-lg);
   background: var(--color-surface-hover);
   border-color: var(--color-primary);
-  transition: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }

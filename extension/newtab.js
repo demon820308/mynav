@@ -694,11 +694,14 @@ function startDrag(e, card) {
   
   const offsetX = e.clientX - gripX;
   const offsetY = e.clientY - gripY;
-  ghost.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) scale(1.05)`;
+  
+  // Apply initial scale and tilt rotate for physical pickup feel
+  ghost.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) scale(1.05) rotate(1.5deg)`;
   
   document.body.appendChild(ghost);
 
-  card.style.opacity = '0.3';
+  // Hide the original card slot
+  card.style.opacity = '0';
 
   const sourceGrid = card.closest('.links-grid');
   let siblingRects = [];
@@ -739,7 +742,8 @@ function onDragMove(e) {
     const offsetX = e.clientX - gripX;
     const offsetY = e.clientY - gripY;
     
-    ghost.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) scale(1.05)`;
+    // Smooth trailing with tilt rotate
+    ghost.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) scale(1.05) rotate(1.5deg)`;
 
     let newTarget = null;
     for (const item of siblingRects) {
@@ -763,34 +767,95 @@ async function onDragEnd() {
   if (rAF) cancelAnimationFrame(rAF);
   if (!dragState) return;
 
-  const { card, ghost, swapTarget } = dragState;
+  const { card, ghost, swapTarget, moved } = dragState;
 
-  ghost.remove();
-  card.style.opacity = '';
   if (swapTarget) swapTarget.classList.remove('drop-target');
 
   document.removeEventListener('mousemove', onDragMove);
   document.removeEventListener('mouseup',   onDragEnd);
 
-  if (dragState.moved && swapTarget) {
-    const grid = card.closest('.links-grid');
-    if (grid && grid === swapTarget.closest('.links-grid')) {
-      const children = [...grid.querySelectorAll('.link-card[data-link-id]')];
-      const cardIndex = children.indexOf(card);
-      const targetIndex = children.indexOf(swapTarget);
+  const grid = card.closest('.links-grid');
 
-      if (cardIndex < targetIndex) {
-        grid.insertBefore(card, swapTarget.nextSibling);
-      } else {
-        grid.insertBefore(card, swapTarget);
-      }
+  if (moved && swapTarget && grid && grid === swapTarget.closest('.links-grid')) {
+    // 1. FLIP: Record initial positions
+    const siblings = [...grid.querySelectorAll('.link-card[data-link-id]')];
+    const positions = siblings.map(c => {
+      const rect = c.getBoundingClientRect();
+      return { left: rect.left, top: rect.top };
+    });
 
-      await saveOrder(grid);
+    // 2. Perform DOM movement
+    const cardIndex = siblings.indexOf(card);
+    const targetIndex = siblings.indexOf(swapTarget);
+
+    if (cardIndex < targetIndex) {
+      grid.insertBefore(card, swapTarget.nextSibling);
+    } else {
+      grid.insertBefore(card, swapTarget);
     }
+
+    // 3. FLIP: Record final positions
+    const newSiblings = [...grid.querySelectorAll('.link-card[data-link-id]')];
+    const newPositions = newSiblings.map(c => {
+      const rect = c.getBoundingClientRect();
+      return { left: rect.left, top: rect.top };
+    });
+
+    // 4. Calculate target landing rect for the ghost
+    const targetRect = card.getBoundingClientRect();
+
+    // 5. Animate ghost landing (with scale recovery and spring curve)
+    ghost.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    ghost.style.transform = `translate3d(${targetRect.left}px, ${targetRect.top}px, 0) scale(1) rotate(0deg)`;
+
+    // 6. FLIP: Animate other cards sliding
+    newSiblings.forEach((c, i) => {
+      if (c === card) return; // card itself is hidden and represented by ghost
+      
+      const oldIdx = siblings.indexOf(c);
+      if (oldIdx === -1) return;
+      
+      const dx = positions[oldIdx].left - newPositions[i].left;
+      const dy = positions[oldIdx].top - newPositions[i].top;
+      
+      if (dx !== 0 || dy !== 0) {
+        c.style.transition = 'none';
+        c.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+        c.offsetHeight; // force reflow
+        c.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        c.style.transform = 'none';
+        
+        // Cleanup transition styles after animation completes
+        setTimeout(() => {
+          c.style.transition = '';
+          c.style.transform = '';
+        }, 300);
+      }
+    });
+
+    // 7. Cleanup ghost and restore card visibility after landing animation
+    setTimeout(async () => {
+      ghost.remove();
+      card.style.opacity = '';
+      await saveOrder(grid);
+    }, 300);
+
+  } else {
+    // No swap happened, animate ghost back to its original slot
+    const targetRect = card.getBoundingClientRect();
+    ghost.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    ghost.style.transform = `translate3d(${targetRect.left}px, ${targetRect.top}px, 0) scale(1) rotate(0deg)`;
+    
+    setTimeout(() => {
+      ghost.remove();
+      card.style.opacity = '';
+    }, 300);
   }
 
   dragState = null;
 }
+
+
 
 async function saveOrder(grid) {
   const newCategoryId = Number(grid.dataset.categoryId);
