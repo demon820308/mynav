@@ -123,5 +123,6 @@
   --color-warning: #fbbf24;
   --color-danger: #f87171;
   --color-danger-hover: #fca5a5;
+  --backdrop-blur: none;
 }
 

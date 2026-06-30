@@ -957,37 +957,39 @@ input:focus, select:focus, textarea:focus {
 /* Theme and Background Switcher Styles */
 
 [data-theme="light"] {
-  --color-bg-gradient: radial-gradient(circle at center, #f5f3ff 0%, #e0e7ff 100%);
-  --color-surface: rgba(255, 255, 255, 0.6);
-  --color-surface-hover: rgba(255, 255, 255, 0.9);
-  --color-text: #1f2937;
-  --color-ink: #111827;
+  --color-bg-gradient: #fbf6ee;
+  --color-surface: #ffffff;
+  --color-surface-hover: #fffdf8;
+  --color-text: #111827;
+  --color-ink: #201914;
   --color-muted: #6b7280;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-hover: rgba(0, 0, 0, 0.18);
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+  --color-border: #ded2c3;
+  --color-border-hover: #c4b5a3;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --backdrop-blur: none;
 }
 
 [data-theme="dark"] {
-  --color-bg-gradient: radial-gradient(circle at center, #1e1b4b 0%, #0f0b29 100%);
-  --color-surface: rgba(255, 255, 255, 0.06);
-  --color-surface-hover: rgba(255, 255, 255, 0.12);
-  --color-text: #f3f4f6;
-  --color-ink: #ffffff;
-  --color-muted: #9ca3af;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-hover: rgba(255, 255, 255, 0.25);
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f46e5;
+  --color-bg-gradient: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-text: #e2e8f0;
+  --color-ink: #f8fafc;
+  --color-muted: #94a3b8;
+  --color-border: #334155;
+  --color-border-hover: #475569;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #93bbfd;
   --color-danger: #ef4444;
   --color-danger-hover: #dc2626;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+  --backdrop-blur: none;
 }
 
 [data-bg-style="glass-dark"] {
@@ -1043,5 +1045,6 @@ input:focus, select:focus, textarea:focus {
   --color-border-hover: #3f3f46;
   --color-primary: #3f3f46;
   --color-primary-hover: #52525b;
+  --backdrop-blur: none;
 }
 
