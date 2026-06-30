@@ -385,7 +385,6 @@ function renderLinkCard(link, favorites) {
       </div>
       ${editMode ? `
         <div class="card-edit-actions">
-          <button class="btn btn-ghost btn-sm" data-action="edit-link" data-id="${link.id}" title="编辑">✏️</button>
           <button class="btn btn-danger btn-sm" data-action="delete-link" data-id="${link.id}" data-title="${escapeHtml(link.title)}" title="删除">🗑️</button>
         </div>
       ` : `
@@ -428,6 +427,14 @@ function bindEvents(favorites) {
   if (editMode) {
     document.querySelectorAll('[data-action]').forEach(el => {
       el.addEventListener('click', handleAction);
+    });
+    // Click card body to edit link
+    document.querySelectorAll('.link-card[data-link-id]').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.link-fav') || e.target.closest('[data-action]')) return;
+        const link = allLinks.find(l => l.id === Number(card.dataset.linkId));
+        if (link) showLinkModal(link);
+      });
     });
   }
 
