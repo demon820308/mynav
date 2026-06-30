@@ -316,6 +316,7 @@ function startDrag(e, card) {
   ghost.style.height = rect.height + 'px';
   ghost.style.left = '0px';
   ghost.style.top = '0px';
+  ghost.style.transition = 'none';
   
   const gripX = e.clientX - rect.left;
   const gripY = e.clientY - rect.top;
