@@ -767,11 +767,15 @@ async function onDragEnd() {
   if (dragState.moved && swapTarget) {
     const grid = card.closest('.links-grid');
     if (grid && grid === swapTarget.closest('.links-grid')) {
-      const placeholder = document.createElement('div');
-      grid.insertBefore(placeholder, card);
-      grid.insertBefore(card, swapTarget);
-      grid.insertBefore(swapTarget, placeholder);
-      placeholder.remove();
+      const children = [...grid.querySelectorAll('.link-card[data-link-id]')];
+      const cardIndex = children.indexOf(card);
+      const targetIndex = children.indexOf(swapTarget);
+
+      if (cardIndex < targetIndex) {
+        grid.insertBefore(card, swapTarget.nextSibling);
+      } else {
+        grid.insertBefore(card, swapTarget);
+      }
 
       await saveOrder(grid);
     }

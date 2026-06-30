@@ -327,13 +327,15 @@ function onDragEnd() {
     const grid = card.closest('.links-grid');
     // Guard: only swap within the same grid
     if (grid && grid === swapTarget.closest('.links-grid')) {
-      // Standard placeholder-based DOM swap
-      // Before: [... A ... B ...]  → After: [... B ... A ...]
-      const placeholder = document.createElement('div');
-      grid.insertBefore(placeholder, card);       // mark A's slot
-      grid.insertBefore(card, swapTarget);        // move A to B's position
-      grid.insertBefore(swapTarget, placeholder); // move B to A's old slot
-      placeholder.remove();
+      const children = [...grid.querySelectorAll('.link-card[data-link-id]')];
+      const cardIndex = children.indexOf(card);
+      const targetIndex = children.indexOf(swapTarget);
+
+      if (cardIndex < targetIndex) {
+        grid.insertBefore(card, swapTarget.nextSibling);
+      } else {
+        grid.insertBefore(card, swapTarget);
+      }
 
       saveOrder(grid);
     }
@@ -1225,11 +1227,15 @@ function onMemoDragEnd() {
   document.removeEventListener('mouseup', onMemoDragEnd);
 
   if (memoDragState.moved && swapTarget) {
-    const placeholder = document.createElement('div');
-    listEl.insertBefore(placeholder, card);
-    listEl.insertBefore(card, swapTarget);
-    listEl.insertBefore(swapTarget, placeholder);
-    placeholder.remove();
+    const children = [...listEl.querySelectorAll('.memo-card[data-id]')];
+    const cardIndex = children.indexOf(card);
+    const targetIndex = children.indexOf(swapTarget);
+
+    if (cardIndex < targetIndex) {
+      listEl.insertBefore(card, swapTarget.nextSibling);
+    } else {
+      listEl.insertBefore(card, swapTarget);
+    }
 
     saveMemoOrder(listEl);
   }
