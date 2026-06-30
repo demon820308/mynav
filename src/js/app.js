@@ -240,6 +240,7 @@ function handleAction(e) {
 function initDragAndDrop() {
   document.querySelectorAll('.link-card[data-link-id]').forEach(card => {
     card.addEventListener('mousedown', (e) => {
+      if (editMode) return; // Disable dragging in edit mode
       if (e.button !== 0) return; // left click only
       if (e.target.closest('.link-fav') || e.target.closest('[data-action]')) return;
       
