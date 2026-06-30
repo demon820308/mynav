@@ -28,6 +28,8 @@
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --backdrop-blur: blur(16px);
   --color-header-bg: rgba(15, 11, 41, 0.45);
+  --color-search-bg: rgba(0, 0, 0, 0.2);
+  --color-search-bg-focus: rgba(0, 0, 0, 0.35);
 }
 
 /* Light theme options (optional toggle or auto) */
@@ -196,7 +198,7 @@ body {
 
 .clock-date {
   font-size: 13px;
-  color: var(--color-muted);
+  color: var(--color-ink);
   font-weight: 400;
 }
 
@@ -212,7 +214,7 @@ body {
   padding: 0 16px 0 42px;
   border: 1px solid var(--color-border);
   border-radius: 19px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--color-search-bg);
   color: var(--color-ink);
   font-size: 14px;
   transition: all var(--transition);
@@ -221,7 +223,7 @@ body {
 .search-box input:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--color-search-bg-focus);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
@@ -974,6 +976,8 @@ input:focus, select:focus, textarea:focus {
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
   --backdrop-blur: none;
   --color-header-bg: rgba(251, 246, 238, 0.85);
+  --color-search-bg: #ffffff;
+  --color-search-bg-focus: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -994,6 +998,8 @@ input:focus, select:focus, textarea:focus {
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
   --backdrop-blur: none;
   --color-header-bg: rgba(15, 23, 42, 0.85);
+  --color-search-bg: rgba(0, 0, 0, 0.2);
+  --color-search-bg-focus: rgba(0, 0, 0, 0.35);
 }
 
 [data-bg-style="glass-dark"] {
@@ -1009,6 +1015,8 @@ input:focus, select:focus, textarea:focus {
   --color-primary-hover: #4f46e5;
   --backdrop-blur: blur(16px);
   --color-header-bg: rgba(15, 11, 41, 0.45);
+  --color-search-bg: rgba(0, 0, 0, 0.2);
+  --color-search-bg-focus: rgba(0, 0, 0, 0.35);
 }
 
 [data-bg-style="aurora"] {
@@ -1024,6 +1032,8 @@ input:focus, select:focus, textarea:focus {
   --color-primary-hover: #0ea5e9;
   --backdrop-blur: blur(16px);
   --color-header-bg: rgba(11, 19, 43, 0.5);
+  --color-search-bg: rgba(0, 0, 0, 0.2);
+  --color-search-bg-focus: rgba(0, 0, 0, 0.35);
 }
 
 [data-bg-style="sunset"] {
@@ -1039,6 +1049,8 @@ input:focus, select:focus, textarea:focus {
   --color-primary-hover: #d946ef;
   --backdrop-blur: blur(16px);
   --color-header-bg: rgba(30, 27, 75, 0.5);
+  --color-search-bg: rgba(0, 0, 0, 0.2);
+  --color-search-bg-focus: rgba(0, 0, 0, 0.35);
 }
 
 [data-bg-style="obsidian"] {
@@ -1054,5 +1066,7 @@ input:focus, select:focus, textarea:focus {
   --color-primary-hover: #52525b;
   --backdrop-blur: none;
   --color-header-bg: rgba(9, 9, 11, 0.85);
+  --color-search-bg: #18181b;
+  --color-search-bg-focus: #27272a;
 }
 
