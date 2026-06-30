@@ -2,6 +2,7 @@
   --color-bg: #fbf6ee;
   --color-bg-soft: #fffdf8;
   --color-surface: #ffffff;
+  --color-modal-bg: #ffffff;
   --color-text: #111827;
   --color-ink: #201914;
   --color-muted: #6b7280;
@@ -33,6 +34,7 @@
   --color-bg: #0f172a;
   --color-bg-soft: #1e293b;
   --color-surface: #1e293b;
+  --color-modal-bg: #1e293b;
   --color-text: #e2e8f0;
   --color-ink: #f8fafc;
   --color-muted: #94a3b8;
@@ -55,6 +57,7 @@
   --color-bg: radial-gradient(circle at center, #1e1b4b 0%, #0f0b29 100%);
   --color-bg-soft: rgba(255, 255, 255, 0.03);
   --color-surface: rgba(255, 255, 255, 0.06);
+  --color-modal-bg: rgba(17, 16, 34, 0.96);
   --color-text: #f3f4f6;
   --color-ink: #ffffff;
   --color-muted: #9ca3af;
@@ -77,6 +80,7 @@
   --color-bg: linear-gradient(135deg, #0b132b 0%, #1c2541 40%, #3a506b 100%);
   --color-bg-soft: rgba(255, 255, 255, 0.03);
   --color-surface: rgba(255, 255, 255, 0.05);
+  --color-modal-bg: rgba(15, 23, 42, 0.96);
   --color-text: #e2e8f0;
   --color-ink: #f8fafc;
   --color-muted: #94a3b8;
@@ -95,6 +99,7 @@
   --color-bg: linear-gradient(135deg, #1e1b4b 0%, #701a75 50%, #311042 100%);
   --color-bg-soft: rgba(255, 255, 255, 0.03);
   --color-surface: rgba(255, 255, 255, 0.05);
+  --color-modal-bg: rgba(30, 16, 42, 0.96);
   --color-text: #f3f4f6;
   --color-ink: #ffffff;
   --color-muted: #c084fc;
@@ -113,6 +118,7 @@
   --color-bg: #09090b;
   --color-bg-soft: #18181b;
   --color-surface: #18181b;
+  --color-modal-bg: #18181b;
   --color-text: #e4e4e7;
   --color-ink: #fafafa;
   --color-muted: #71717a;

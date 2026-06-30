@@ -30,6 +30,7 @@
   --color-header-bg: rgba(15, 11, 41, 0.45);
   --color-search-bg: rgba(0, 0, 0, 0.2);
   --color-search-bg-focus: rgba(0, 0, 0, 0.35);
+  --color-modal-bg: rgba(17, 16, 34, 0.96);
 }
 
 /* Light theme options (optional toggle or auto) */
@@ -527,7 +528,8 @@ input:focus, select:focus, textarea:focus {
 .form-label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-muted);
+  color: var(--color-text);
+  opacity: 0.8;
 }
 
 /* ── Modal overlay ── */
@@ -545,7 +547,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .modal-panel {
-  background: #111022; /* darker background for modal contrast */
+  background: var(--color-modal-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 28px;
@@ -976,6 +978,7 @@ input:focus, select:focus, textarea:focus {
   --color-header-bg: rgba(251, 246, 238, 0.85);
   --color-search-bg: #ffffff;
   --color-search-bg-focus: #ffffff;
+  --color-modal-bg: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -998,6 +1001,7 @@ input:focus, select:focus, textarea:focus {
   --color-header-bg: rgba(15, 23, 42, 0.85);
   --color-search-bg: rgba(0, 0, 0, 0.2);
   --color-search-bg-focus: rgba(0, 0, 0, 0.35);
+  --color-modal-bg: #1e293b;
 }
 
 [data-bg-style="glass-dark"] {
@@ -1015,6 +1019,7 @@ input:focus, select:focus, textarea:focus {
   --color-header-bg: rgba(15, 11, 41, 0.45);
   --color-search-bg: rgba(0, 0, 0, 0.2);
   --color-search-bg-focus: rgba(0, 0, 0, 0.35);
+  --color-modal-bg: rgba(17, 16, 34, 0.96);
 }
 
 [data-bg-style="aurora"] {
@@ -1032,6 +1037,7 @@ input:focus, select:focus, textarea:focus {
   --color-header-bg: rgba(11, 19, 43, 0.5);
   --color-search-bg: rgba(0, 0, 0, 0.2);
   --color-search-bg-focus: rgba(0, 0, 0, 0.35);
+  --color-modal-bg: rgba(15, 23, 42, 0.96);
 }
 
 [data-bg-style="sunset"] {
@@ -1049,6 +1055,7 @@ input:focus, select:focus, textarea:focus {
   --color-header-bg: rgba(30, 27, 75, 0.5);
   --color-search-bg: rgba(0, 0, 0, 0.2);
   --color-search-bg-focus: rgba(0, 0, 0, 0.35);
+  --color-modal-bg: rgba(30, 16, 42, 0.96);
 }
 
 [data-bg-style="obsidian"] {
@@ -1066,5 +1073,6 @@ input:focus, select:focus, textarea:focus {
   --color-header-bg: rgba(9, 9, 11, 0.85);
   --color-search-bg: #18181b;
   --color-search-bg-focus: #27272a;
+  --color-modal-bg: #18181b;
 }
 
