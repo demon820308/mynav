@@ -311,7 +311,9 @@ function renderCategories(categories, links, favorites) {
     }
   }
 
-  const groups = Object.values(grouped).filter(g => g.links.length > 0 || editMode);
+  const groups = categories
+    .map(cat => grouped[cat.id])
+    .filter(g => g.links.length > 0 || editMode);
 
   const html = groups.map(group => `
     <section class="category fade-in" data-category-id="${group.id}">
