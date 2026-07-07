@@ -299,10 +299,11 @@ function renderCategories(categories, links, favorites) {
     return;
   }
 
+  const sortedCategories = [...categories].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   const sortedLinks = [...links].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   const grouped = {};
-  for (const cat of categories) {
+  for (const cat of sortedCategories) {
     grouped[cat.id] = { ...cat, links: [] };
   }
   for (const link of sortedLinks) {
@@ -311,7 +312,7 @@ function renderCategories(categories, links, favorites) {
     }
   }
 
-  const groups = categories
+  const groups = sortedCategories
     .map(cat => grouped[cat.id])
     .filter(g => g.links.length > 0 || editMode);
 
